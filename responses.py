@@ -48,9 +48,17 @@ MONITORING_ALREADY_DISABLED = "Sticker monitoring already disabled"
 CANT_FIND_USER_ERROR = "Can't find the user for that sticker"
 USER_BANNED = "That user has been banned. They have 0 sticker limit"
 USER_LIMIT_RESET = "That user has had their stickers reset. They now have "  # Variable and "sticker" at end
+PRINT_OFFSET_LIST = "The current print offset in pixels:"
+PRINT_OFFSET_INSTRUCTIONS = "Change these by typing \"print offset x/y \" and a number." \
+                            "\nx is horizontal, y is vertical offset"
+PRINT_OFFSET_X_EXAMPLE = "Ex: print offset x 5"
+PRINT_OFFSET_Y_EXAMPLE = "Ex: print offset y -15"
+SET_PRINT_OFFSET_X = "The x (horizontal) offset is now set to "
+SET_PRINT_OFFSET_Y = "The x (vertical) offset is now set to "
 NO_FILE = "The user file is not found or no users have been recorded yet. Either way, it's a clean slate."
 CANT_DELETE_FILE = "Unable to delete the user file"
-SUPERUSER_NOT_SET = "There is no superuser set.\nEnter your Telegram user ID in BotConfig.ini in the \"super_user_id\" field"
+SUPERUSER_NOT_SET = "There is no superuser set.\n" \
+                    "Enter your Telegram user ID in BotConfig.ini in the \"super_user_id\" field"
 
 # After the user sends a sticker. Picks at random from the list and inserted at "_____! Sending to the printer!"
 def GetConfirmMessage():

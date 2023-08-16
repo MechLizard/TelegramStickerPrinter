@@ -39,6 +39,16 @@ BAN = "ban"
 # Sets user's stickers printed to 0
 RESET = "reset"
 
+# Displays current offset and explains how to use the offset commands
+PRINT_OFFSET = "print offset"
+
+# Adjust the x (Horizontal) offset of the image
+PRINT_OFFSET_X = "print offset x"
+
+# Adjust the y (vertical) offset of the image
+PRINT_OFFSET_Y = "print offset y"
+
+
 """
 # === Conversions and math stuff === #
 # Probably don't touch this

@@ -10,7 +10,6 @@ from datetime import datetime
 import sys
 
 import zpl
-import telegram
 from zebra import Zebra
 from telegram import Update
 from telegram.ext import (
@@ -69,9 +68,9 @@ except FileNotFoundError:
     users = []
 
 
-# ========================= #
-# ======= Functions ======= #
-# ========================= #
+# =============================== #
+# ======= Async Functions ======= #
+# =============================== #
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not state_cf['bot_enabled']:
         return
@@ -163,7 +162,8 @@ async def receive_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     "Reply commands (Reply to a monitored sticker):\n"
                     "[+ or - or =][number] - Add, subtract, or set sticker limit (Ex: +5, -1, or =999)\n"
                     f"\"{BAN}\" - Bans the user. Sets their limit to 0\n"
-                    f"\"{RESET}\" - Resets the user's used stickers to 0. Lets them print more")
+                    f"\"{RESET}\" - Resets the user's used stickers to 0. Lets them print more\n"
+                    f"\"{PRINT_OFFSET}\" - Displays the current print offset and displays commands for adjusting")
             await context.bot.send_message(chat_id=update.effective_chat.id, text=text)
             return
 
@@ -190,15 +190,14 @@ async def receive_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Set all limits to X
         # Command has 3 parts: The command, a space, and a digit
         if command.startswith(SET_ALL_LIMIT):  # Command starts with the limit command
-            if command[len(SET_ALL_LIMIT) + 1:].isdigit():  # if command ends with a number
-                if command[len(SET_ALL_LIMIT)] == " ":  # If there is a space between
-
-                    new_limit = command[len(SET_ALL_LIMIT) + 1:]
-                    for i in users:
-                        i.sticker_max = new_limit
-                    users_cf['sticker_limit'] = new_limit
-                    text = responses.SET_NEW_LIMIT + str(new_limit)
-                    await context.bot.send_message(chat_id=update.effective_chat.id, text=text)
+            command_int = get_command_int(SET_ALL_LIMIT, command)
+            if not command_int is None:
+                new_limit = command_int
+                for i in users:
+                    i.sticker_max = new_limit
+                users_cf['sticker_limit'] = new_limit
+                text = responses.SET_NEW_LIMIT + str(new_limit)
+                await context.bot.send_message(chat_id=update.effective_chat.id, text=text)
             return
 
         # Get sticker limit
@@ -246,6 +245,43 @@ async def receive_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
             state_cf['sticker_monitoring'] = True
             await context.bot.send_message(chat_id=update.effective_chat.id, text=text)
             return
+
+        # Display print offset and list commands
+        if command == PRINT_OFFSET:
+            text = responses.PRINT_OFFSET_LIST + "\n"
+            text += "Print offset x = " + str(printer_cf["image_offset_x"]) + "\n"
+            text += "Print offset y = " + str(printer_cf["image_offset_y"]) + "\n\n"
+            text += responses.PRINT_OFFSET_INSTRUCTIONS + "\n"
+            text += responses.PRINT_OFFSET_X_EXAMPLE + "\n"
+            text += responses.PRINT_OFFSET_Y_EXAMPLE
+
+            await context.bot.send_message(chat_id=update.effective_chat.id, text=text)
+            return
+
+        # Set the x (Horizontal) print offset
+        if command.startswith(PRINT_OFFSET_X):
+            command_int = get_command_int(PRINT_OFFSET_X, command)
+            if command_int is not None:
+                printer_cf["image_offset_x"] = command_int
+
+                text = responses.SET_PRINT_OFFSET_X
+                text += str(printer_cf["image_offset_x"])
+
+                await context.bot.send_message(chat_id=update.effective_chat.id, text=text)
+                return
+
+        # Set the y (vertical) print offset
+        if command.startswith(PRINT_OFFSET_Y):
+            command_int = get_command_int(PRINT_OFFSET_Y, command)
+            if command_int is not None:
+                printer_cf["image_offset_y"] = command_int
+
+                text = responses.SET_PRINT_OFFSET_Y
+                text += str(printer_cf["image_offset_y"])
+
+                await context.bot.send_message(chat_id=update.effective_chat.id, text=text)
+                return
+
 
         text = f"Command not recognized. Type \"{COMMANDS}\" for a list of commands"
         await context.bot.send_message(chat_id=update.effective_chat.id, text=text)
@@ -351,14 +387,46 @@ async def animated_sticker_error(update: Update, context: ContextTypes.DEFAULT_T
     await context.bot.send_message(chat_id=update.effective_chat.id, text=responses.ANIMATED_STICKER_ERROR)
 
 
-async def main():
-    bot = telegram.Bot("6167661077:AAHCLCbzSo5mpTQ_9ysjAC8wdRmk1htSHIA")
-    async with bot:
-        message = (await bot.get_updates())[-1].message.text
-        await bot.send_message(text=message + "\n\n That's what you sound like, you goober", chat_id=92233565)
+# ========================= #
+# ======= Functions ======= #
+# ========================= #
 
+def get_command_int(command, user_response):
+    # For commands that require a command and a number. This is for checking if its valid and to return that number
+    # Input:
+        # Command: The command that the program expects
+        # user_response: the full text of what the user sent
+    # Output: Bool None if the response is bad. Int if the response is good
+
+    modifier = False
+
+    # Check if there is a + or - before the number
+    if user_response[len(command) + 1] == "+" or user_response[len(command) + 1] == "-":
+        modifier = True
+
+    # If there is a space between
+    if not user_response[len(command)] == " ":
+        return None
+
+    # if command ends with a number
+    if not user_response[len(command) + modifier + 1:].isdigit():  # Modifier adds +1 if true
+        return None
+
+    # At this point the command is valid
+
+    number = int(user_response[len(command) + modifier + 1:])
+
+    # If there is a negative sign before the number
+    if modifier and user_response[len(command) + 1] == "-":
+        number *= -1
+
+    return number
 
 def print_sticker(incoming_sticker):
+    # Takes a sticker object and prints it.
+    # Input: A PIL Image object converted to RGBA format
+    # Output: A print job sent to the Zebra printer queue in the config
+
     # TODO Don't make stickers resize so much.
     print_command_gen = zpl.Label(printer_cf['media_mm_x'], printer_cf['media_mm_y'], printer_cf['dpmm'])
     # Start with white square as a background
@@ -391,7 +459,6 @@ def print_sticker(incoming_sticker):
 # ======= Main ======= #
 # ==================== #
 if __name__ == '__main__':
-    #asyncio.run(main())
 
     # ==== Function Declarations ====#
     text_handler = MessageHandler(filters.TEXT & (~filters.COMMAND), receive_text)
