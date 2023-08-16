@@ -83,6 +83,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def receive_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     global users
 
+
+
     # ==== Superuser commands ==== #
     if update.message.from_user.id in setup_cf['super_user_id']:
         command = update.message.text.lower()
@@ -247,6 +249,14 @@ async def receive_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         text = f"Command not recognized. Type \"{COMMANDS}\" for a list of commands"
         await context.bot.send_message(chat_id=update.effective_chat.id, text=text)
+        return
+
+    # If there is no superuser set and someone requests a list of commands
+    elif len(setup_cf['super_user_id']) == 0 and update.message.text.lower() == COMMANDS:
+        text = responses.SUPERUSER_NOT_SET
+        text += "\n\nYour user ID is: " + str(update.message.from_user.id)
+        await context.bot.send_message(chat_id=update.effective_chat.id, text=text)
+        return
 
     # If the user isn't a superuser
     else:

@@ -20,6 +20,17 @@ BONUS_STICKER_MESSAGE = "Also, since you've been so nice I'm also printing this 
 # "I'm also printing this one for you to remember me!"
 # "I'm also printing this one just for you!
 
+END_MESSAGE = """
+    NOTE: DO NOT put these stickers on con/hotel walls. Do not put this on property that isn't yours. Don't be THAT furry.
+
+These are paper stickers and they suck to remove. 
+To remove them from something you can use isopropyl alcohol, WD-40, or Goo-Gone
+
+Too much heat and friction will turn these black (It's basically receipt thermal paper). These will start fading in about 6 months and will fade faster in direct sunlight.
+
+Have a good rest of your con!
+"""
+
 # ==== Super user responses ==== #
 LOGS_CLEARED = "User limits have been reset"
 USERS_WIPED = "All users wiped"
@@ -39,17 +50,7 @@ USER_BANNED = "That user has been banned. They have 0 sticker limit"
 USER_LIMIT_RESET = "That user has had their stickers reset. They now have "  # Variable and "sticker" at end
 NO_FILE = "The user file is not found or no users have been recorded yet. Either way, it's a clean slate."
 CANT_DELETE_FILE = "Unable to delete the user file"
-
-END_MESSAGE = """
-    NOTE: DO NOT put these stickers on con/hotel walls. Do not put this on property that isn't yours. Don't be THAT furry.
-    
-These are paper stickers and they suck to remove. 
-To remove them from something you can use isopropyl alcohol, WD-40, or Goo-Gone
-    
-Too much heat and friction will turn these black (It's basically receipt thermal paper). These will start fading in about 6 months and will fade faster in direct sunlight.
-    
-Have a good rest of your con!
-"""
+SUPERUSER_NOT_SET = "There is no superuser set.\nEnter your Telegram user ID in BotConfig.ini in the \"super_user_id\" field"
 
 # After the user sends a sticker. Picks at random from the list and inserted at "_____! Sending to the printer!"
 def GetConfirmMessage():
