@@ -1,6 +1,7 @@
 import configparser
 import ast
 
+
 def get_default_config():
     setup = {'telegram_api_token': '',
              'super_user_id': [],
@@ -29,6 +30,7 @@ def get_default_config():
 
     return default_config
 
+
 def create_config(conf_info):
     config = configparser.ConfigParser(allow_no_value=True)
 
@@ -42,7 +44,7 @@ def create_config(conf_info):
     config.set('SETUP', '# The token you got from Telegram\'s BotFather as a string', None)
     config.set('SETUP', 'TELEGRAM_API_TOKEN', conf_info['SETUP']['telegram_api_token'])
 
-    config.set('SETUP', '# The ID of the user that is allowed to give moderator commands. Can add multiple, each seperated by a comma. A list of ints (can be one)', None)
+    config.set('SETUP', '# The ID of the user that is allowed to give moderator commands. Can add multiple, each separated by a comma. A list of ints (can be one)', None)
     config.set('SETUP', 'SUPER_USER_ID', conf_info['SETUP']['super_user_id'])
 
     config.set('SETUP', '# When sending a text message to the bot, will it respond with your chat ID? Used to get your ID to set the SUPER_USER_ID', None)
@@ -125,7 +127,6 @@ def read_config():
             # This is there because the format of the api token can cause a syntax error
             except SyntaxError:
                 pass
-
 
     # === Conversions and math stuff === #
 

@@ -48,6 +48,15 @@ PRINT_OFFSET_X = "print offset x"
 # Adjust the y (vertical) offset of the image
 PRINT_OFFSET_Y = "print offset y"
 
+# Displays the current queue and checks if it exists
+CHECK_QUEUE = "check queue"
+
+# Lists the print queues on the device
+LIST_QUEUES = "list queues"
+
+# Sets the print queue to your specification
+SET_QUEUE = "set queue"
+
 
 """
 # === Conversions and math stuff === #

@@ -1,4 +1,5 @@
 import random
+import constants
 
 # First message when starting the bot
 GREETING = "Hi! Send me any sticker and I'll print it!"
@@ -55,6 +56,19 @@ PRINT_OFFSET_X_EXAMPLE = "Ex: print offset x 5"
 PRINT_OFFSET_Y_EXAMPLE = "Ex: print offset y -15"
 SET_PRINT_OFFSET_X = "The x (horizontal) offset is now set to "
 SET_PRINT_OFFSET_Y = "The x (vertical) offset is now set to "
+SET_QUEUE_INSTRUCTIONS = f"Check connection or set the queue with \"{constants.LIST_QUEUES}\" " \
+                            f"and \"{constants.SET_QUEUE}\""
+CHECK_QUEUE_NO_QUEUE = "There is no printer queue set.\n\n" + SET_QUEUE_INSTRUCTIONS
+CHECK_QUEUE_SUCCESS = "The print queue exists."
+CHECK_QUEUE_FAIL = "The current print queue is not found in the system.\n\n" + SET_QUEUE_INSTRUCTIONS
+LIST_QUEUES = "These are the current queues: "
+LIST_QUEUES_NO_QUEUES = "There are currently no printer queues on this system. Connect a printer and try again"
+SET_QUEUE_SUCCESS = "Print queue has been set"
+SET_QUEUE_SYNTAX_ERROR = "Improper syntax. You must have the command, a space, and then the print queue name\n" \
+                         f"Ex: {constants.SET_QUEUE} Zebra_QL320plus"
+SET_QUEUE_BAD_QUEUE = f"That print queue does not exist on this device. \n" \
+                      f"Use \"{constants.LIST_QUEUES}\" to list the current print queues on this device"
+BOT_ENABLE_ERROR_NO_QUEUE = "Bot enable failed. The print queue is not available.\n\n" + SET_QUEUE_INSTRUCTIONS
 NO_FILE = "The user file is not found or no users have been recorded yet. Either way, it's a clean slate."
 CANT_DELETE_FILE = "Unable to delete the user file"
 SUPERUSER_NOT_SET = "There is no superuser set.\n" \

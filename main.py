@@ -1,4 +1,3 @@
-# Bot name is at @TheStickerPrinterBot (https://t.me/TheStickerPrinterBot)
 # This is an interactive bot that prints any Telegram stickers sent to it as a physical sticker
 
 import pickle
@@ -7,7 +6,6 @@ import io
 import os
 import logging
 from datetime import datetime
-import sys
 
 import zpl
 from zebra import Zebra
@@ -52,7 +50,7 @@ except:
     # If there is no correct queue. Inform user in command prompt and list printers
     print(responses.MISSING_QUEUE)
     print(printer.getqueues())
-    sys.exit()
+    state_cf['bot_enabled'] = False
 
 # Apply token
 application = ApplicationBuilder().token(setup_cf['telegram_api_token']).build()
@@ -121,7 +119,8 @@ async def receive_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     return
                 if command.startswith("-"):
                     current_user.sticker_max -= int(command[1:])
-                    text = f"Removed {int(command[1:])} stickers from that user. They now have a limit of {current_user.sticker_max}"
+                    text = f"Removed {int(command[1:])} stickers from that user. " \
+                           f"They now have a limit of {current_user.sticker_max}"
                     await context.bot.send_message(chat_id=update.effective_chat.id, text=text)
                     return
                 if command.startswith("="):
@@ -159,11 +158,15 @@ async def receive_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     f"\"{STICKER_MONITORING_ON}\" - Turn on monitoring (sends superusers all printed stickers)\n"
                     f"\"{STICKER_MONITORING_OFF}\" - Turn off monitoring\n"
                     f"\"{COMMANDS}\" - Displays this help message\n\n"
+                    "Printer commands:\n"
+                    f"\"{PRINT_OFFSET}\" - Displays the current print offset and displays commands for adjusting\n"
+                    f"\"{CHECK_QUEUE}\" - Displays the current queue and checks if it exists\n"
+                    f"\"{LIST_QUEUES}\" - Lists the print queues on the device\n"
+                    f"\"{SET_QUEUE}\" - Sets the print queue (Ex: {SET_QUEUE} Zebra_QL230)\n\n"
                     "Reply commands (Reply to a monitored sticker):\n"
                     "[+ or - or =][number] - Add, subtract, or set sticker limit (Ex: +5, -1, or =999)\n"
                     f"\"{BAN}\" - Bans the user. Sets their limit to 0\n"
-                    f"\"{RESET}\" - Resets the user's used stickers to 0. Lets them print more\n"
-                    f"\"{PRINT_OFFSET}\" - Displays the current print offset and displays commands for adjusting")
+                    f"\"{RESET}\" - Resets the user's used stickers to 0. Lets them print more\n")
             await context.bot.send_message(chat_id=update.effective_chat.id, text=text)
             return
 
@@ -191,7 +194,7 @@ async def receive_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Command has 3 parts: The command, a space, and a digit
         if command.startswith(SET_ALL_LIMIT):  # Command starts with the limit command
             command_int = get_command_int(SET_ALL_LIMIT, command)
-            if not command_int is None:
+            if command_int is not None:
                 new_limit = command_int
                 for i in users:
                     i.sticker_max = new_limit
@@ -221,8 +224,13 @@ async def receive_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
             if state_cf['bot_enabled']:
                 text = responses.BOT_ALREADY_ENABLED
             else:
-                text = responses.BOT_ENABLED
-            state_cf['bot_enabled'] = True
+                # Checks to make sure there is a valid print queue before enabling
+                if printer_cf['printer_queue'].lower() in (queue.lower() for queue in printer.getqueues()):
+                    state_cf['bot_enabled'] = True
+                    text = responses.BOT_ENABLED
+                else:
+                    text = responses.BOT_ENABLE_ERROR_NO_QUEUE
+
             await context.bot.send_message(chat_id=update.effective_chat.id, text=text)
             return
 
@@ -282,6 +290,45 @@ async def receive_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 await context.bot.send_message(chat_id=update.effective_chat.id, text=text)
                 return
 
+        # Display the current queue and checks if it exists on the system
+        if command == CHECK_QUEUE:
+            if printer_cf['printer_queue'] == '':
+                text = responses.CHECK_QUEUE_NO_QUEUE
+            elif printer_cf['printer_queue'].lower() in (queue.lower() for queue in printer.getqueues()):
+                text = responses.CHECK_QUEUE_SUCCESS + "\n\n"
+                text += f"The current print queue is {printer_cf['printer_queue']}"
+            else:
+                text = responses.CHECK_QUEUE_FAIL
+
+            await context.bot.send_message(chat_id=update.effective_chat.id, text=text)
+            return
+
+        # Lists the print queues on the device
+        if command == LIST_QUEUES:
+            if len(printer.getqueues()) > 0:
+                text = responses.LIST_QUEUES + "\n"
+                for i in printer.getqueues():
+                    text += i + "\n"
+            else:
+                text = responses.LIST_QUEUES_NO_QUEUES
+
+            await context.bot.send_message(chat_id=update.effective_chat.id, text=text)
+            return
+
+        # Sets the print queue to your specification
+        if command.startswith(SET_QUEUE):
+
+            if command[len(SET_QUEUE)] == " " and len(command[len(SET_QUEUE) + 1:]) > 1:
+                if command[len(SET_QUEUE) + 1:] in (queue.lower() for queue in printer.getqueues()):
+                    printer_cf['printer_queue'] = command[len(SET_QUEUE) + 1:]
+                    text = responses.SET_QUEUE_SUCCESS
+                else:
+                    text = responses.SET_QUEUE_BAD_QUEUE
+            else:
+                text = responses.SET_QUEUE_SYNTAX_ERROR
+
+            await context.bot.send_message(chat_id=update.effective_chat.id, text=text)
+            return
 
         text = f"Command not recognized. Type \"{COMMANDS}\" for a list of commands"
         await context.bot.send_message(chat_id=update.effective_chat.id, text=text)
@@ -422,6 +469,7 @@ def get_command_int(command, user_response):
 
     return number
 
+
 def print_sticker(incoming_sticker):
     # Takes a sticker object and prints it.
     # Input: A PIL Image object converted to RGBA format
@@ -442,14 +490,6 @@ def print_sticker(incoming_sticker):
 
     # print(print_command_gen.dumpZPL())  # Can be used to display the print commands
     printer.output(print_command_gen.dumpZPL())
-    # TODO: Test this and see what situations give an error or just hangs in the queue
-    # try:
-    # print_graphic(x, y, width, length, data, qty)
-    # printer.print_graphic(0, 0, MEDIA_SIZE_Y, MEDIA_SIZE_X, sticker_img, 1)
-    # except:
-    #    text = responses.PRINTER_OFFLINE + "\n\n" + current_user.get_limit_response()
-    #    await context.bot.send_message(chat_id=update.effective_chat.id, text=text)
-    #    return
 
     del print_command_gen
     del sticker_img
@@ -473,4 +513,3 @@ if __name__ == '__main__':
     application.add_handler(animated_sticker_handler)
 
     application.run_polling()
-
