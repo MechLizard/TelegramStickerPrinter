@@ -35,7 +35,8 @@ printer_cf = config['PRINTER']
 users_cf = config['USERS']
 state_cf = config['STATE']
 
-
+# TODO: When using the last sticker it gives a message that implies that the sticker wasn't sent
+# TODO: Enable/disable bonus stickers
 # TODO: Put this as a toggle in the constants file.
 # printer.getqueues() to get list of queues
 # printer.setqueue( queue ) to set the printer queue
@@ -81,7 +82,8 @@ async def receive_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     global users
 
 
-
+    # TODO convert this terrible tree in to something more readable.
+        # Possibly moved to a different file that returns result that can be processed here
     # ==== Superuser commands ==== #
     if update.message.from_user.id in setup_cf['super_user_id']:
         command = update.message.text.lower()
