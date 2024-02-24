@@ -18,7 +18,7 @@ A superuser can communicate with the bot through Telegram messages. These comman
 When the script is run for the first time, it creates a default configuration. This config is used to change default settings but is also used to store the API key and super user ID.
 
 # Example
-![img_2.png](img_2.png) ![img_3.png](img_3.png)
+![img_2.png](readme_images/chat_img.png) ![img_3.png](readme_images/printer_img.png)
 
 # Instructions
 Windows:
