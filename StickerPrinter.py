@@ -1,5 +1,6 @@
 # This is an interactive bot that prints any Telegram stickers sent to it as a physical sticker
 
+from __future__ import annotations
 import pickle
 import random
 import io
@@ -14,6 +15,9 @@ from telegram.ext import (
     filters, MessageHandler, ApplicationBuilder, ContextTypes, CommandHandler
 )
 from PIL import Image
+from pyrlottie import (LottieFile,
+                       convSingleLottieFrames,
+                       run)
 
 from constants import *
 import responses
@@ -384,11 +388,28 @@ async def receive_sticker(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # === Print the Sticker === #
     sticker_file = await update.message.sticker.get_file()
-    sticker_buffer = io.BytesIO(b"")  # Create a memory buffer for the sticker to be downloaded to
-    await sticker_file.download_to_memory(sticker_buffer)  # Download sticker
-    incoming_sticker = Image.open(sticker_buffer).convert("RGBA")  # Create Image object
-    print_sticker(incoming_sticker)
-    sticker_buffer.close()
+
+    if update.message.sticker.is_animated:
+        # For pyrlottie to convert animated images, it must be saved to disk.
+        await sticker_file.download_to_drive(os.getcwd() + r"\animStickerBuff.tgs")
+        gLottieFile = LottieFile(os.getcwd() + r"\animStickerBuff.tgs")
+
+        # Convert and extract frames
+        frame_skip = 5000
+        background_color = "FFFFFF"
+        gLottieFrames = await convSingleLottieFrames(gLottieFile, background_color, frame_skip, 1)
+
+        # Get the first item in the gLottieFrames dict and get the first frame
+        incoming_sticker = gLottieFrames[list(gLottieFrames)[0]].frames[0]
+        incoming_sticker = incoming_sticker.convert("RGBA")
+        print_sticker(incoming_sticker)
+    else:
+        # Static sticker
+        sticker_buffer = io.BytesIO(b"")  # Create a memory buffer for the sticker to be downloaded to
+        await sticker_file.download_to_memory(sticker_buffer)  # Download sticker
+        incoming_sticker = Image.open(sticker_buffer).convert("RGBA")  # Create Image object
+        print_sticker(incoming_sticker)
+        sticker_buffer.close()
 
     # Subtract sticker from the user's amount
     current_user.sticker_count += 1
@@ -505,13 +526,13 @@ if __name__ == '__main__':
     # ==== Function Declarations ====#
     text_handler = MessageHandler(filters.TEXT & (~filters.COMMAND), receive_text)
     start_handler = CommandHandler('start', start)
-    sticker_handler = MessageHandler(filters.Sticker.STATIC, receive_sticker)
-    animated_sticker_handler = MessageHandler(filters.Sticker.ALL & (~filters.Sticker.STATIC), animated_sticker_error)
+    sticker_handler = MessageHandler(filters.Sticker.ALL, receive_sticker)
+    #animated_sticker_handler = MessageHandler(filters.Sticker.ALL & (~filters.Sticker.STATIC), animated_sticker_error)
 
     # ==== Handlers ==== #
     application.add_handler(start_handler)
     application.add_handler(text_handler)
     application.add_handler(sticker_handler)
-    application.add_handler(animated_sticker_handler)
+    #application.add_handler(animated_sticker_handler)
 
     application.run_polling()
