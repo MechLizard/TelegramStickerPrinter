@@ -362,9 +362,6 @@ async def receive_sticker(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not state_cf['bot_enabled']:
         return
 
-    if update.message.from_user.id in setup_cf['super_user_id'] and False:
-        return
-
     if update.message.date.now() < bot_start_time:
         return
 
@@ -373,7 +370,7 @@ async def receive_sticker(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if update.message.from_user.id == i.user_id:
             current_user = i
             break
-    # If they aren't found in the array, add them to it
+    # If they aren't found in the list, add them to it
     else:
         users.append(User(update, users_cf))
         current_user = users[-1]
@@ -444,18 +441,12 @@ async def receive_sticker(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # Send Sticker to superuser
     if state_cf['sticker_monitoring']:
-        # TODO: Exclude superusers from this
         for i in setup_cf['super_user_id']:
             forwarded_message = await update.message.forward(i)
             current_user.log_message(forwarded_message.id)
 
     # Save data
     pickle.dump(users, open("limit_tracker.p", "wb"))
-
-
-async def animated_sticker_error(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await context.bot.send_message(chat_id=update.effective_chat.id, text=responses.ANIMATED_STICKER_ERROR)
-
 
 # ========================= #
 # ======= Functions ======= #
@@ -527,12 +518,10 @@ if __name__ == '__main__':
     text_handler = MessageHandler(filters.TEXT & (~filters.COMMAND), receive_text)
     start_handler = CommandHandler('start', start)
     sticker_handler = MessageHandler(filters.Sticker.ALL, receive_sticker)
-    #animated_sticker_handler = MessageHandler(filters.Sticker.ALL & (~filters.Sticker.STATIC), animated_sticker_error)
 
     # ==== Handlers ==== #
     application.add_handler(start_handler)
     application.add_handler(text_handler)
     application.add_handler(sticker_handler)
-    #application.add_handler(animated_sticker_handler)
 
     application.run_polling()
