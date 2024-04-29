@@ -7,6 +7,7 @@ import io
 import os
 import logging
 from datetime import datetime
+from typing import Dict
 
 import zpl
 from zebra import Zebra
@@ -62,13 +63,14 @@ application = ApplicationBuilder().token(setup_cf['telegram_api_token']).build()
 
 bot_start_time = datetime.now()
 
+
+users: Dict[int, User] = {}
 # Check if there is a previously saved user list
 try:
     with open("limit_tracker.p", "rb") as file:
         users = pickle.load(file)
 except FileNotFoundError:
     print("Starting a new list")
-    users = []
 
 
 # =============================== #
@@ -98,21 +100,16 @@ async def receive_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             # Get the sender ID
             if reply_message.forward_from is not None:
-                sender_id = reply_message.forward_from.id
+                current_user = users.get(reply_message.forward_from.id)
             else:  # if the user has their chat hidden
-                for i in users:
-                    if i.check_log(reply_message.id):
-                        sender_id = i.user_id
+                for key, value in users.items():
+                    if value.check_log(reply_message.id):
+                        current_user = users.get(value.user_id)
                         break
                 else:
-                    await context.bot.send_message(chat_id=update.effective_chat.id, text=responses.CANT_FIND_USER_ERROR)
-                    return
+                    current_user = None
 
-            for i in users:
-                if i.user_id == sender_id:
-                    current_user = i
-                    break
-            else:
+            if current_user is None:
                 await context.bot.send_message(chat_id=update.effective_chat.id, text=responses.CANT_FIND_USER_ERROR)
                 return
 
@@ -366,14 +363,10 @@ async def receive_sticker(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     # Find user in the users list
-    for i in users:
-        if update.message.from_user.id == i.user_id:
-            current_user = i
-            break
-    # If they aren't found in the list, add them to it
-    else:
-        users.append(User(update, users_cf))
-        current_user = users[-1]
+    current_user = users.get(update.message.from_user.id)
+    if current_user is None:
+        users[update.message.from_user.id] = User(update, users_cf)
+        current_user = users[update.message.from_user.id]
 
     # Error if user has no stickers left
     if current_user.sticker_count >= current_user.sticker_max:
@@ -389,15 +382,15 @@ async def receive_sticker(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.message.sticker.is_animated:
         # For pyrlottie to convert animated images, it must be saved to disk.
         await sticker_file.download_to_drive(os.getcwd() + r"\animStickerBuff.tgs")
-        gLottieFile = LottieFile(os.getcwd() + r"\animStickerBuff.tgs")
+        g_lottie_file = LottieFile(os.getcwd() + r"\animStickerBuff.tgs")
 
         # Convert and extract frames
         frame_skip = 5000
         background_color = "FFFFFF"
-        gLottieFrames = await convSingleLottieFrames(gLottieFile, background_color, frame_skip, 1)
+        g_lottie_frames = await convSingleLottieFrames(g_lottie_file, background_color, frame_skip, 1)
 
-        # Get the first item in the gLottieFrames dict and get the first frame
-        incoming_sticker = gLottieFrames[list(gLottieFrames)[0]].frames[0]
+        # Get the first item in the g_lottie_frames dict and get the first frame
+        incoming_sticker = g_lottie_frames[list(g_lottie_frames)[0]].frames[0]
         incoming_sticker = incoming_sticker.convert("RGBA")
         print_sticker(incoming_sticker)
     else:
