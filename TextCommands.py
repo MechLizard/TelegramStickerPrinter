@@ -108,6 +108,7 @@ def get_command_int(command, user_response):
 
     modifier = False
 
+    # TODO: This gives an error if "setlimit" doesn't have a + or -
     # Check if there is a + or - before the number
     if user_response[len(command) + 1] == "+" or user_response[len(command) + 1] == "-":
         modifier = True

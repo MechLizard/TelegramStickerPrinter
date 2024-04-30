@@ -10,6 +10,7 @@ class User:
         self.sticker_count = 0
         self.quiz_encounter = False
         self.bonus_sticker_encounter = False
+        self.end_message_encounter = False
         self.sticker_history = []
 
     def __eq__(self, other):
@@ -19,9 +20,13 @@ class User:
 
     def get_limit_response(self):
         if self.sticker_count >= self.sticker_max:
-            return responses.OUT_OF_STICKERS
+            if not self.end_message_encounter:
+                self.end_message_encounter = True
+                return responses.END_MESSAGE
+            else:
+                return responses.OUT_OF_STICKERS
         else:
-            return "You still have " + str(self.sticker_max - self.sticker_count) + " stickers left"
+            return "You still have " + str(self.sticker_max - self.sticker_count) + " stickers left."
 
     def log_message(self, message_id):
         self.sticker_history.append(message_id)

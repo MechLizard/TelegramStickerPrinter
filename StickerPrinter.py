@@ -133,10 +133,6 @@ async def receive_sticker(update, context, application):
     # Random event
     await StickerCommands.random_event(update, context, current_user, application, printer, users_cf, printer_cf)
 
-    # If no more stickers available
-    if current_user.sticker_count >= current_user.sticker_max:
-        await context.bot.send_message(chat_id=update.effective_chat.id, text=responses.END_MESSAGE)  # Goodbye message
-
     # Send Sticker to superuser if enabled
     await StickerCommands.forward_to_superuser(update, current_user, setup_cf, state_cf)
 

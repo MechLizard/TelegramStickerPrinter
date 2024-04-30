@@ -22,7 +22,7 @@ BONUS_STICKER_MESSAGE = "Also, since you've been so nice I'm also printing this 
 # "I'm also printing this one just for you!
 
 END_MESSAGE = """
-    You are now out of stickers :(
+You are now out of stickers :(
 
 NOTE: DO NOT put this on property that isn't yours. Don't be THAT furry.
 
