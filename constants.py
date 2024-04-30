@@ -1,5 +1,3 @@
-# TODO: Make these togglable via messages on telegram to make it headless.
-
 # ==== Superuser commands ==== #
 # After setting your Telegram chat ID, send these strings to the bot over Telegram to interact with it.
 

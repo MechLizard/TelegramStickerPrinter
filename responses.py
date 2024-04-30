@@ -22,12 +22,13 @@ BONUS_STICKER_MESSAGE = "Also, since you've been so nice I'm also printing this 
 # "I'm also printing this one just for you!
 
 END_MESSAGE = """
-    NOTE: DO NOT put these stickers on con/hotel walls. Do not put this on property that isn't yours. Don't be THAT furry.
+    You are now out of stickers :(
 
-These are paper stickers and they suck to remove. 
-To remove them from something you can use isopropyl alcohol, WD-40, or Goo-Gone
+NOTE: DO NOT put this on property that isn't yours. Don't be THAT furry.
 
-Too much heat and friction will turn these black (It's basically receipt thermal paper). These will start fading in about 6 months and will fade faster in direct sunlight.
+These are paper stickers and they're annoying to remove. Use isopropyl alcohol, WD-40, or Goo-Gone to make it easier.
+
+Too much heat will turn these black. These will start fading in a few years and will fade faster in direct sunlight or with constant gentle friction.
 
 Have a good rest of your con!
 """
@@ -80,16 +81,17 @@ def GetConfirmMessage():
         "Pog!",
         "As an AI language model that sticker is dope as fuck.",
         "👀👌💯",
+        "😎👌 😕🕶👌 ...okay.",
         "...really?",
         "Nice!",
         "Wow, great choice!",
         "That's a juicy sticker right there.",
         "Coming right up!",
         "This one will look great on your water bottle you bring to work.",
-        """...look, I don't judge. While I'm not in to that I understand that others are.
-        
-...Not that you're an \"other\" or anything like... look, just take your sticker.""",
-        "Cool! That sticker is only 18% cringe!",
+        #"""...look, I don't judge. While I'm not in to that I understand that others are.
+        #
+#...Not that you're an \"other\" or anything like... look, just take your sticker.""",
+        "That sticker is only 18% cringe!",
         "Thank you for signing up for the furry surveillance program. We are now watching.",
     ]
 
