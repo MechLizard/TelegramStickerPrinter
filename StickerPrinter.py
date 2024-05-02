@@ -27,12 +27,8 @@ printer_cf = config['PRINTER']
 users_cf = config['USERS']
 state_cf = config['STATE']
 
-# TODO: Enable/disable bonus stickers
-# TODO: Put this as a toggle in the constants file.
 # TODO: Make a save command, to save current configuration
 # TODO: Properly comment the function of the functions
-# printer.getqueues() to get list of queues
-# printer.setqueue( queue ) to set the printer queue
 
 printer = Zebra(printer_cf['printer_queue'])  # z = Zebra( [queue] )
 try:
@@ -79,7 +75,7 @@ async def receive_text(update, context):
         command = update.message.text.lower()
 
         if await TextCommands.super_user_command(update, context, command, users, printer,
-                                              setup_cf, printer_cf, users_cf, state_cf):
+                                                 printer_cf, users_cf, state_cf):
             return
         else:
             await TextCommands.command_not_recognized(update, context)

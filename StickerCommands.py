@@ -78,7 +78,12 @@ async def convert_sticker(update, sticker_file, printer_cf) -> Image:
     return print_image
 
 
-async def random_event(update, context, current_user, application, printer, users_cf, printer_cf):
+async def random_event(update, context, current_user, application, printer, state_cf, users_cf, printer_cf):
+
+    # If random events are disabled, return.
+    if not state_cf['event']:
+        return
+
     # Random event
     if current_user.sticker_count / current_user.sticker_max >= users_cf['ran_event_start']:
         if random.randint(1, 100) <= users_cf['ran_event_chance'] and not current_user.bonus_sticker_encounter:

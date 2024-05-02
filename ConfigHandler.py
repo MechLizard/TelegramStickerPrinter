@@ -21,7 +21,8 @@ def get_default_config():
              'ran_event_chance': 60}
 
     state = {'bot_enabled': True,
-             'sticker_monitoring': True}
+             'sticker_monitoring': True,
+             'event': True}
 
     default_config = {'SETUP': setup,
                       'PRINTER': printer,
@@ -94,6 +95,9 @@ def create_config(conf_info):
 
     config.set('STATE', '# Whether sticker monitoring is enabled at the start', None)
     config.set('STATE', 'STICKER_MONITORING', conf_info['STATE']['sticker_monitoring'])
+
+    config.set('STATE', '# Whether the random event is enabled at the start', None)
+    config.set('STATE', 'EVENT', conf_info['STATE']['event'])
 
     with open('BotConfig.ini', 'w') as configfile:
         config.write(configfile)

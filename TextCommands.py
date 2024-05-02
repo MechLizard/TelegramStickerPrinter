@@ -4,7 +4,7 @@ from constants import *
 import responses
 
 
-async def super_user_command(update, context, command, users, printer, setup_cf, printer_cf, users_cf, state_cf) -> bool:
+async def super_user_command(update, context, command, users, printer, printer_cf, users_cf, state_cf) -> bool:
     # ==== Reply Commands ==== #
     if update.message.reply_to_message is not None:
         reply_message = update.message.reply_to_message
@@ -82,6 +82,10 @@ async def super_user_command(update, context, command, users, printer, setup_cf,
     if await set_queue(update, context, command, printer, printer_cf):
         return True
 
+    # Enables/disables the random event
+    if await toggle_random_event(update, context, command, state_cf):
+        return True
+
     return False
 
 
@@ -98,7 +102,6 @@ async def no_super_users(update, context, setup_cf) -> bool:
 # ========================= #
 # ======= Functions ======= #
 # ========================= #
-# TODO: Make command to enable/disable random events
 def get_command_int(command, user_response):
     # For commands that require a command and a number. This is for checking if its valid and to return that number
     # Input:
@@ -132,7 +135,7 @@ def get_command_int(command, user_response):
     return number
 
 
-async def user_limit_adjust (update, context, command, current_user) -> bool:
+async def user_limit_adjust(update, context, command, current_user) -> bool:
     # Add or subtract sticker limit (Ex: +5 or -2 or =999 to change limit)
     if command[1:].isdigit():
         if command.startswith("+"):
@@ -180,6 +183,8 @@ async def list_commands(update, context, command):
                 f"\"{BOT_DISABLE}\" - Disables the bot\n"
                 f"\"{STICKER_MONITORING_ON}\" - Turn on monitoring (sends superusers all printed stickers)\n"
                 f"\"{STICKER_MONITORING_OFF}\" - Turn off monitoring\n"
+                f"\"{EVENT_ON}\" - Turn on random events\n"
+                f"\"{EVENT_OFF}\" - Turn off random events\n"
                 f"\"{COMMANDS}\" - Displays this help message\n\n"
                 "Printer commands:\n"
                 f"\"{PRINT_OFFSET}\" - Displays the current print offset and displays commands for adjusting\n"
@@ -245,7 +250,7 @@ async def get_limit(update, context, command, users_cf) -> bool:
 
 
 async def toggle_bot(update, context, command, printer, state_cf, printer_cf) -> bool:
-# Turn off bot
+    # Turn off bot
     if command == BOT_DISABLE:
         if state_cf['bot_enabled']:
             text = responses.BOT_DISABLED
@@ -387,6 +392,30 @@ async def set_queue(update, context, command, printer, printer_cf) -> bool:
         else:
             text = responses.SET_QUEUE_SYNTAX_ERROR
 
+        await context.bot.send_message(chat_id=update.effective_chat.id, text=text)
+        return True
+
+    return False
+
+
+async def toggle_random_event(update, context, command, state_cf) -> bool:
+    # Turn on random events
+    if command == EVENT_ON:
+        if state_cf['event']:
+            text = responses.EVENT_ALREADY_ENABLED
+        else:
+            text = responses.EVENT_ENABLED
+            state_cf['event'] = True
+        await context.bot.send_message(chat_id=update.effective_chat.id, text=text)
+        return True
+
+    # Turn off random events
+    if command == EVENT_OFF:
+        if state_cf['event']:
+            text = responses.EVENT_DISABLED
+            state_cf['event'] = False
+        else:
+            text = responses.EVENT_ALREADY_DISABLED
         await context.bot.send_message(chat_id=update.effective_chat.id, text=text)
         return True
 
