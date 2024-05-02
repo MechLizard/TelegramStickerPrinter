@@ -27,9 +27,10 @@ printer_cf = config['PRINTER']
 users_cf = config['USERS']
 state_cf = config['STATE']
 
-# TODO: When using the last sticker it gives a message that implies that the sticker wasn't sent
 # TODO: Enable/disable bonus stickers
 # TODO: Put this as a toggle in the constants file.
+# TODO: Make a save command, to save current configuration
+# TODO: Properly comment the function of the functions
 # printer.getqueues() to get list of queues
 # printer.setqueue( queue ) to set the printer queue
 
@@ -119,9 +120,9 @@ async def receive_sticker(update, context, application):
     sticker_file = await update.message.sticker.get_file()
 
     # Convert sticker to printable format
-    incoming_sticker = await StickerCommands.convert_sticker(update, sticker_file)
+    print_image = await StickerCommands.convert_sticker(update, sticker_file, printer_cf)
 
-    StickerCommands.print_sticker(incoming_sticker, printer, printer_cf)
+    StickerCommands.print_sticker(print_image, printer, printer_cf)
 
     # Subtract sticker from the user's amount
     current_user.sticker_count += 1

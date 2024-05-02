@@ -4,9 +4,6 @@ import constants
 # First message when starting the bot
 GREETING = "Hi! Send me any sticker and I'll print it!"
 
-# Error when sent an animated sticker
-ANIMATED_STICKER_ERROR = "Bitch, this ain't Harry Potter, I can't print an animated sticker"
-
 OUT_OF_STICKERS = "Sorry, but you are out of stickers :("
 STICKER_PRINTED = "Sending to the printer!"
 
@@ -30,7 +27,7 @@ These are paper stickers and they're annoying to remove. Use isopropyl alcohol, 
 
 Too much heat will turn these black. These will start fading in a few years and will fade faster in direct sunlight or with constant gentle friction.
 
-Have a good rest of your con!
+Have a good con!
 """
 
 # ==== Super user responses ==== #

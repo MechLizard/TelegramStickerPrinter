@@ -33,7 +33,8 @@ async def limit_exceeded(update, context, current_user) -> bool:
     return False
 
 
-async def convert_sticker(update, sticker_file) -> Image:
+async def convert_sticker(update, sticker_file, printer_cf) -> Image:
+    # Converts the sticker in to a format the printer can accept.
     if update.message.sticker.is_animated:
         # For pyrlottie to convert animated images, it must be saved to disk.
         await sticker_file.download_to_drive(os.getcwd() + r"\animStickerBuff.tgs")
@@ -54,7 +55,27 @@ async def convert_sticker(update, sticker_file) -> Image:
         incoming_sticker = Image.open(sticker_buffer).convert("RGBA")  # Create Image object
         sticker_buffer.close()
 
-    return incoming_sticker
+    # Resize the media without changing aspect ratio so that it fills the media without stretching the image.
+    ratio_x = printer_cf['media_size_x'] / incoming_sticker.size[0]
+    ratio_y = printer_cf['media_size_y'] / incoming_sticker.size[1]
+    scale_factor = min(ratio_x, ratio_y)
+    new_img_x = int(incoming_sticker.size[0] * scale_factor)
+    new_img_y = int(incoming_sticker.size[1] * scale_factor)
+    incoming_sticker = incoming_sticker.resize((new_img_x, new_img_y))
+
+    # Create a centered offset to paste the image on to a canvas matching the print media.
+    print_offset_x = (printer_cf['media_size_x'] - new_img_x) // 2
+    print_offset_y = (printer_cf['media_size_y'] - new_img_y) // 2
+
+    # Create a canvas the size of the print media and paste the sticker on it.
+    print_image = Image.new("RGBA",
+                            (printer_cf['media_size_x'],
+                             printer_cf['media_size_y']),
+                            color="white")  # Uses white background so that transparent pixels don't show up as black.
+    print_image.paste(incoming_sticker, (print_offset_x, print_offset_y), mask=incoming_sticker)
+    print_image = print_image.convert("1")  # Convert image to 1-byte B&W image
+
+    return print_image
 
 
 async def random_event(update, context, current_user, application, printer, users_cf, printer_cf):
@@ -88,26 +109,21 @@ async def forward_to_superuser(update, current_user, setup_cf, state_cf):
             current_user.log_message(forwarded_message.id)
 
 
-def print_sticker(incoming_sticker, printer, printer_cf):
+def print_sticker(print_image, printer, printer_cf):
     # Takes a sticker object and prints it.
     # Input: A PIL Image object converted to RGBA format
     # Output: A print job sent to the Zebra printer queue in the config
 
-    # TODO Make stickers resize in both directions until one side hits the edge. Use laughing emoji 😂 to test with kekw sticker
     print_command_gen = zpl.Label(printer_cf['media_mm_x'], printer_cf['media_mm_y'], printer_cf['dpmm'])
-    # Start with white square as a background
-    sticker_img = Image.new("RGBA", (printer_cf['media_size_x'], printer_cf['media_size_y']), "WHITE")
-    # Resize the sticker to size of print media
-    incoming_sticker = incoming_sticker.resize((printer_cf['media_size_x'], printer_cf['media_size_y']))
-    sticker_img.paste(incoming_sticker, mask=incoming_sticker)  # Turn transparent pixels white by pasting sticker over white square
-    sticker_img = sticker_img.convert("1")  # Convert image to 1-byte B&W image
     # sticker_img.show()  # Can be used to display the sticker on the host
-    print_command_gen.origin(printer_cf['image_offset_x'], printer_cf['image_offset_y'])
-    print_command_gen.write_graphic(sticker_img, printer_cf['media_mm_x'])
+
+    print_command_gen.origin(printer_cf['image_offset_x'],
+                             printer_cf['image_offset_y'])
+    print_command_gen.write_graphic(print_image, printer_cf['media_mm_x'])
     print_command_gen.endorigin()
 
     # print(print_command_gen.dumpZPL())  # Can be used to display the print commands
     printer.output(print_command_gen.dumpZPL())
 
     del print_command_gen
-    del sticker_img
+    del print_image
