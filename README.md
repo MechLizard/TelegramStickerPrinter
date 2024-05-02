@@ -11,6 +11,7 @@ A superuser can communicate with the bot through Telegram messages. These comman
 - Get info on sticker limit, status, queue, and settings
 - Enable/disable the bot
 - Enable/disable sticker monitoring (forwards the printed stickers to the superusers)
+- Enable/disable random events
 - Reply to a monitored sticker to reset/adjust a specific user's sticker limit or ban them
 - Adjust print image offset and queue name
 
