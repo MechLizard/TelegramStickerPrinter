@@ -86,15 +86,13 @@ async def random_event(update, context, current_user, application, printer, stat
 
     # Random event
     if current_user.sticker_count / current_user.sticker_max >= users_cf['ran_event_start']:
-        if True:
-            # if not current_user.bonus_sticker_encounter and random.randint(1, 100) <= users_cf['ran_event_chance']:
+        if not current_user.bonus_sticker_encounter and random.randint(1, 100) <= users_cf['ran_event_chance']:
             # === Do random event === #
 
             current_user.bonus_sticker_encounter = True
             await context.bot.send_message(chat_id=update.effective_chat.id, text=responses.BONUS_STICKER_MESSAGE)
 
             # === Print a bonus sticker=== #
-            #bonus_pack = await application.do_api_request("get_sticker_set", {"name": "BonusSticker"})
             bonus_pack = await application.bot.get_sticker_set("BonusSticker")
             bonus_pack = bonus_pack.stickers
             chosen_sticker = bonus_pack[random.randint(0, len(bonus_pack) - 1)].file_id
