@@ -26,7 +26,7 @@ class User:
             else:
                 return responses.OUT_OF_STICKERS
         else:
-            return "You still have " + str(self.sticker_max - self.sticker_count) + " stickers left."
+            return responses.STICKER_COUNT.format(count=str(self.sticker_max - self.sticker_count))
 
     def log_message(self, message_id):
         self.sticker_history.append(message_id)

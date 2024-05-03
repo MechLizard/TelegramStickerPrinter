@@ -5,6 +5,7 @@ import constants
 GREETING = "Hi! Send me any sticker and I'll print it!"
 
 OUT_OF_STICKERS = "You are now out of stickers :("
+STICKER_COUNT = "You still have {count} stickers left."
 STICKER_PRINTED = "Sending to the printer!"
 
 # Unresponsive printer message
@@ -18,7 +19,7 @@ BONUS_STICKER_MESSAGE = "Also, since you've been so nice I'm also printing this 
 # "I'm also printing this one for you to remember me!"
 # "I'm also printing this one just for you!
 
-END_MESSAGE = """
+END_MESSAGE = r"""
 You are now out of stickers :(
 
 NOTE: DO NOT put these on property that isn't yours.
@@ -28,6 +29,8 @@ These are paper stickers and they're annoying to remove. Use isopropyl alcohol, 
 Too much heat will turn these black. Will start fading in a few years and will fade faster in direct sunlight or with frequent friction.
 
 Have a good con!
+
+<a href="https://github.com/MechLizard/TelegramStickerPrinter">Github of this code</a> and <a href="https://about.me/IzzyJones">check me out</a> if you're hiring.
 """
 
 # ==== Super user responses ==== #

@@ -125,7 +125,9 @@ async def receive_sticker(update, context, application):
 
     # Send confirmation
     text = responses.GetConfirmMessage() + "\n\n" + current_user.get_limit_response()
-    await context.bot.send_message(chat_id=update.effective_chat.id, text=text)
+    await context.bot.send_message(chat_id=update.effective_chat.id, text=text,
+                                   disable_web_page_preview=True,
+                                   parse_mode="HTML")
 
     # Random event
     await StickerCommands.random_event(update, context, current_user, application, printer, state_cf, users_cf, printer_cf)
