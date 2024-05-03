@@ -10,8 +10,8 @@ async def super_user_command(update, context, command, users, printer, printer_c
         reply_message = update.message.reply_to_message
 
         # Get the sender ID
-        if reply_message.forward_from is not None:
-            current_user = users.get(reply_message.forward_from.id)
+        if reply_message.forward_origin != "hidden_user":
+            current_user = users.get(reply_message.forward_origin.sender_user.id)
         else:  # if the user has their chat hidden
             for key, value in users.items():
                 if value.check_log(reply_message.id):
@@ -91,8 +91,7 @@ async def super_user_command(update, context, command, users, printer, printer_c
 
 async def no_super_users(update, context, setup_cf) -> bool:
     if len(setup_cf['super_user_id']) == 0 and update.message.text.lower() == COMMANDS:
-        text = responses.SUPERUSER_NOT_SET
-        text += "\n\nYour user ID is: " + str(update.message.from_user.id)
+        text = responses.SUPERUSER_NOT_SET.format(id=update.message.from_user.id)
         await context.bot.send_message(chat_id=update.effective_chat.id, text=text)
         return True
 
@@ -142,18 +141,19 @@ async def user_limit_adjust(update, context, command, current_user) -> bool:
     if command[1:].isdigit():
         if command.startswith("+"):
             current_user.sticker_max += int(command[1:])
-            text = f"Added {int(command[1:])} stickers to that user. They now have a limit of {current_user.sticker_max}"
+            text = responses.ADD_USER_LIMIT.format(amount=int(command[1:]),
+                                                   total=current_user.sticker_max)
             await context.bot.send_message(chat_id=update.effective_chat.id, text=text)
             return True
         if command.startswith("-"):
             current_user.sticker_max -= int(command[1:])
-            text = f"Removed {int(command[1:])} stickers from that user. " \
-                   f"They now have a limit of {current_user.sticker_max}"
+            text = responses.SUBTRACT_USER_LIMIT.format(amount=int(command[1:]),
+                                                        total=current_user.sticker_max)
             await context.bot.send_message(chat_id=update.effective_chat.id, text=text)
             return True
         if command.startswith("="):
             current_user.sticker_max = int(command[1:])
-            text = f"That user now has a limit of {current_user.sticker_max}"
+            text = responses.SET_USER_LIMIT.format(total=current_user.sticker_max)
             await context.bot.send_message(chat_id=update.effective_chat.id, text=text)
             return True
 
@@ -176,27 +176,7 @@ async def ban_reset (update, context, command, current_user) -> bool:
 
 async def list_commands(update, context, command):
     if command == COMMANDS:
-        text = ("General commands:\n"
-                f"\"{RESET_ALL_COUNT}\" - Resets sticker count to 0\n"
-                f"\"{WIPE}\" - Wipes all users\n"
-                f"\"{SET_ALL_LIMIT} X\" - Sets sticker limit to X\n"
-                f"\"{GET_LIMIT}\" - Shows the current sticker limit\n"
-                f"\"{BOT_ENABLE}\" - Enables the bot\n"
-                f"\"{BOT_DISABLE}\" - Disables the bot\n"
-                f"\"{STICKER_MONITORING_ON}\" - Turn on monitoring (sends superusers all printed stickers)\n"
-                f"\"{STICKER_MONITORING_OFF}\" - Turn off monitoring\n"
-                f"\"{EVENT_ON}\" - Turn on random events\n"
-                f"\"{EVENT_OFF}\" - Turn off random events\n"
-                f"\"{COMMANDS}\" - Displays this help message\n\n"
-                "Printer commands:\n"
-                f"\"{PRINT_OFFSET}\" - Displays the current print offset and displays commands for adjusting\n"
-                f"\"{CHECK_QUEUE}\" - Displays the current queue and checks if it exists\n"
-                f"\"{LIST_QUEUES}\" - Lists the print queues on the device\n"
-                f"\"{SET_QUEUE}\" - Sets the print queue (Ex: {SET_QUEUE} Zebra_QL230)\n\n"
-                "Reply commands (Reply to a monitored sticker):\n"
-                "[+ or - or =][number] - Add, subtract, or set sticker limit (Ex: +5, -1, or =999)\n"
-                f"\"{BAN}\" - Bans the user. Sets their limit to 0\n"
-                f"\"{RESET}\" - Resets the user's used stickers to 0. Lets them print more\n")
+        text = responses.COMMANDS
         await context.bot.send_message(chat_id=update.effective_chat.id, text=text)
         return True
 
@@ -311,12 +291,8 @@ async def toggle_monitoring(update, context, command, state_cf) -> bool:
 async def get_print_offset(update, context, command, printer_cf) -> bool:
     # Display print offset and list commands
     if command == PRINT_OFFSET:
-        text = responses.PRINT_OFFSET_LIST + "\n"
-        text += "Print offset x = " + str(printer_cf["image_offset_x"]) + "\n"
-        text += "Print offset y = " + str(printer_cf["image_offset_y"]) + "\n\n"
-        text += responses.PRINT_OFFSET_INSTRUCTIONS + "\n"
-        text += responses.PRINT_OFFSET_X_EXAMPLE + "\n"
-        text += responses.PRINT_OFFSET_Y_EXAMPLE
+        text = responses.PRINT_OFFSET.format(offset_x=printer_cf["image_offset_x"],
+                                             offset_y=printer_cf["image_offset_y"])
 
         await context.bot.send_message(chat_id=update.effective_chat.id, text=text)
         return True
@@ -358,8 +334,7 @@ async def check_queue(update, context, command, printer, printer_cf) -> bool:
         if printer_cf['printer_queue'] == '':
             text = responses.CHECK_QUEUE_NO_QUEUE
         elif printer_cf['printer_queue'].lower() in (queue.lower() for queue in printer.getqueues()):
-            text = responses.CHECK_QUEUE_SUCCESS + "\n\n"
-            text += f"The current print queue is {printer_cf['printer_queue']}"
+            text = responses.CHECK_QUEUE_SUCCESS.format(print_queue=printer_cf['printer_queue'])
         else:
             text = responses.CHECK_QUEUE_FAIL
 
@@ -429,6 +404,6 @@ async def toggle_random_event(update, context, command, state_cf) -> bool:
 
 
 async def command_not_recognized(update, context):
-    text = f"Command not recognized. Type \"{COMMANDS}\" for a list of commands"
+    text = responses.COMMAND_NOT_RECOGNIZED
     await context.bot.send_message(chat_id=update.effective_chat.id, text=text)
     return

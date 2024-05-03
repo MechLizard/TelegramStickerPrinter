@@ -36,6 +36,10 @@ USERS_WIPED = "All users wiped"
 COUNTS_RESET = "All user counts reset"
 SET_NEW_LIMIT = "New sticker limit set to "  # Variable at end
 GET_LIMIT = "Sticker limit is currently "  # Variable at end
+ADD_USER_LIMIT = "Added {amount} stickers to that user. They now have a limit of {total}"
+SUBTRACT_USER_LIMIT = "Removed {amount} stickers from that user. " \
+    "They now have a limit of {total}"
+SET_USER_LIMIT = "That user now has a limit of {total}"
 BOT_DISABLED = "The bot has been disabled"
 BOT_ENABLED = "The bot has been enabled"
 BOT_ALREADY_DISABLED = "The bot is already disabled"
@@ -51,17 +55,22 @@ EVENT_ALREADY_DISABLED = "Random event is already disabled"
 CANT_FIND_USER_ERROR = "Can't find the user for that sticker"
 USER_BANNED = "That user has been banned. They have 0 sticker limit"
 USER_LIMIT_RESET = "That user has had their stickers reset. They now have "  # Variable and "sticker" at end
-PRINT_OFFSET_LIST = "The current print offset in pixels:"
-PRINT_OFFSET_INSTRUCTIONS = "Change these by typing \"print offset x/y \" and a number." \
-                            "\nx is horizontal, y is vertical offset"
-PRINT_OFFSET_X_EXAMPLE = "Ex: print offset x 5"
-PRINT_OFFSET_Y_EXAMPLE = "Ex: print offset y -15"
+PRINT_OFFSET = """
+The current print offset in pixels:
+Print offset x = {offset_x}
+Print offset y = {offset_y}  
+
+Change these by typing \"print offset x/y \" and a number.
+x is horizontal, y is vertical offset"
+Ex: print offset x 5
+Ex: print offset y -15"""
 SET_PRINT_OFFSET_X = "The x (horizontal) offset is now set to "
 SET_PRINT_OFFSET_Y = "The x (vertical) offset is now set to "
 SET_QUEUE_INSTRUCTIONS = f"Check connection or set the queue with \"{constants.LIST_QUEUES}\" " \
                             f"and \"{constants.SET_QUEUE}\""
 CHECK_QUEUE_NO_QUEUE = "There is no printer queue set.\n\n" + SET_QUEUE_INSTRUCTIONS
-CHECK_QUEUE_SUCCESS = "The print queue exists."
+CHECK_QUEUE_SUCCESS = "The print queue exists.\n\n" \
+    "The current print queue is {print_queue}"
 CHECK_QUEUE_FAIL = "The current print queue is not found in the system.\n\n" + SET_QUEUE_INSTRUCTIONS
 LIST_QUEUES = "These are the current queues: "
 LIST_QUEUES_NO_QUEUES = "There are currently no printer queues on this system. Connect a printer and try again"
@@ -73,8 +82,37 @@ SET_QUEUE_BAD_QUEUE = f"That print queue does not exist on this device. \n" \
 BOT_ENABLE_ERROR_NO_QUEUE = "Bot enable failed. The print queue is not available.\n\n" + SET_QUEUE_INSTRUCTIONS
 NO_FILE = "The user file is not found or no users have been recorded yet. Either way, it's a clean slate."
 CANT_DELETE_FILE = "Unable to delete the user file"
-SUPERUSER_NOT_SET = "There is no superuser set.\n" \
-                    "Enter your Telegram user ID in BotConfig.ini in the \"super_user_id\" field"
+SUPERUSER_NOT_SET = r"""
+There is no superuser set.
+Enter your Telegram user ID in the "super_user_id" field in BotConfig.ini
+
+Your user ID is: {id}
+"""
+COMMAND_NOT_RECOGNIZED = f"Command not recognized. Type \"{constants.COMMANDS}\" for a list of commands"
+COMMANDS = f"""
+General commands:
+\"{constants.RESET_ALL_COUNT}\" - Resets sticker count to 0
+\"{constants.WIPE}\" - Wipes all users
+\"{constants.SET_ALL_LIMIT} X\" - Sets sticker limit to X
+\"{constants.GET_LIMIT}\" - Shows the current sticker limit
+\"{constants.BOT_ENABLE}\" - Enables the bot
+\"{constants.BOT_DISABLE}\" - Disables the bot
+\"{constants.STICKER_MONITORING_ON}\" - Turn on monitoring (sends superusers all printed stickers)
+\"{constants.STICKER_MONITORING_OFF}\" - Turn off monitoring
+\"{constants.EVENT_ON}\" - Turn on random events
+\"{constants.EVENT_OFF}\" - Turn off random events
+\"{constants.COMMANDS}\" - Displays this help message
+
+Printer commands:
+\"{constants.PRINT_OFFSET}\" - Displays the current print offset and displays commands for adjusting
+\"{constants.CHECK_QUEUE}\" - Displays the current queue and checks if it exists
+\"{constants.LIST_QUEUES}\" - Lists the print queues on the device
+\"{constants.SET_QUEUE}\" - Sets the print queue (Ex: {constants.SET_QUEUE} Zebra_QL230)
+
+"Reply commands (Reply to a monitored sticker):
+[+ or - or =][number] - Add, subtract, or set sticker limit (Ex: +5, -1, or =999)
+\"{constants.BAN}\" - Bans the user. Sets their limit to 0
+\"{constants.RESET}\" - Resets the user's used stickers to 0. Lets them print more"""
 
 # After the user sends a sticker. Picks at random from the list and inserted at "_____! Sending to the printer!"
 def GetConfirmMessage():
