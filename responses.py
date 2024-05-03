@@ -4,7 +4,7 @@ import constants
 # First message when starting the bot
 GREETING = "Hi! Send me any sticker and I'll print it!"
 
-OUT_OF_STICKERS = "Sorry, but you are out of stickers :("
+OUT_OF_STICKERS = "You are now out of stickers :("
 STICKER_PRINTED = "Sending to the printer!"
 
 # Unresponsive printer message
