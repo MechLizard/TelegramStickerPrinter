@@ -107,11 +107,13 @@ def get_command_int(command, user_response):
     # Input:
         # Command: The command that the program expects
         # user_response: the full text of what the user sent
-    # Output: Bool None if the response is bad. Int if the response is good
+    # Output: None if the response is bad. Int if the response is good
 
     modifier = False
 
-    # TODO: This gives an error if "setlimit" doesn't have anything after.
+    if len(command) == len(user_response):
+        return None
+
     # Check if there is a + or - before the number
     if user_response[len(command) + 1] == "+" or user_response[len(command) + 1] == "-":
         modifier = True
@@ -228,18 +230,22 @@ async def wipe(update, context, command, users) -> bool:
 async def set_limit(update, context, command, users, users_cf) -> bool:
     # Set all limits to X
     # Command has 3 parts: The command, a space, and a digit
-    if command.startswith(SET_ALL_LIMIT):  # Command starts with the limit command
-        command_int = get_command_int(SET_ALL_LIMIT, command)
-        if command_int is not None:
-            new_limit = command_int
-            for key, value in users.items():
-                value.sticker_max = new_limit
-            users_cf['sticker_limit'] = new_limit
-            text = responses.SET_NEW_LIMIT + str(new_limit)
-            await context.bot.send_message(chat_id=update.effective_chat.id, text=text)
-        return True
+    if not command.startswith(SET_ALL_LIMIT):  # Command starts with the limit command
+        return False
 
-    return False
+    # Get the number from the command
+    command_int = get_command_int(SET_ALL_LIMIT, command)
+    if command_int is None:
+        return False
+
+    # Change the limit on each user
+    for key, value in users.items():
+        value.sticker_max = command_int
+    users_cf['sticker_limit'] = command_int
+    text = responses.SET_NEW_LIMIT + str(command_int)
+    await context.bot.send_message(chat_id=update.effective_chat.id, text=text)
+    return True
+
 
 async def get_limit(update, context, command, users_cf) -> bool:
     if command == GET_LIMIT:
