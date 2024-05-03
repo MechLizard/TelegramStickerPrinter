@@ -21,11 +21,11 @@ BONUS_STICKER_MESSAGE = "Also, since you've been so nice I'm also printing this 
 END_MESSAGE = """
 You are now out of stickers :(
 
-NOTE: DO NOT put this on property that isn't yours. Don't be THAT furry.
+NOTE: DO NOT put these on property that isn't yours.
 
 These are paper stickers and they're annoying to remove. Use isopropyl alcohol, WD-40, or Goo-Gone to make it easier.
 
-Too much heat will turn these black. These will start fading in a few years and will fade faster in direct sunlight or with constant gentle friction.
+Too much heat will turn these black. Will start fading in a few years and will fade faster in direct sunlight or with frequent friction.
 
 Have a good con!
 """
@@ -82,7 +82,7 @@ def GetConfirmMessage():
         "Pog!",
         "As an AI language model that sticker is dope as fuck.",
         "👀👌💯",
-        "😎👌 😕🕶👌 ...okay.",
+        "😎👌 🤨🕶👌 ...okay.",
         "...really?",
         "Nice!",
         "Wow, great choice!",
