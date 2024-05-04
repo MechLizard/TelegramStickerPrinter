@@ -39,10 +39,12 @@ if __name__ == '__main__':
     text_handler = MessageHandler(filters.TEXT & (~filters.COMMAND), receive_text)
     start_handler = CommandHandler('start', start)
     sticker_handler = MessageHandler(filters.Sticker.ALL, receive_sticker)
+    photo_handler = MessageHandler(filters.PHOTO, receive_sticker)
 
     # ==== Handlers ==== #
     application.add_handler(start_handler)
     application.add_handler(text_handler)
     application.add_handler(sticker_handler)
+    application.add_handler(photo_handler)
 
     application.run_polling()

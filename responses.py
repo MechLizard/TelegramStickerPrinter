@@ -2,7 +2,7 @@ import random
 import constants
 
 # First message when starting the bot
-GREETING = "Hi! Send me any sticker and I'll print it!"
+GREETING = "Hi! Send me any sticker or picture and I'll print it!"
 
 OUT_OF_STICKERS = "You are now out of stickers :("
 STICKER_COUNT = "You still have {count} stickers left."

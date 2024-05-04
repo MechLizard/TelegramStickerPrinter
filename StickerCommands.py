@@ -35,7 +35,7 @@ async def limit_exceeded(update, context, current_user) -> bool:
 
 async def convert_sticker(update, sticker_file, printer_cf) -> Image:
     # Converts the sticker in to a format the printer can accept.
-    if update.message.sticker.is_animated:
+    if update.message.sticker is not None and update.message.sticker.is_animated:
         # For pyrlottie to convert animated images, it must be saved to disk.
         await sticker_file.download_to_drive(os.getcwd() + r"\animStickerBuff.tgs")
         g_lottie_file = LottieFile(os.getcwd() + r"\animStickerBuff.tgs")

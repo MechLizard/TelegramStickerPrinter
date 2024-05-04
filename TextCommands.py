@@ -163,7 +163,7 @@ async def user_limit_adjust(update, context, command, current_user) -> bool:
             return True
 
 
-async def ban_reset (update, context, command, current_user) -> bool:
+async def ban_reset(update, context, command, current_user) -> bool:
     # ban
     if command == BAN:
         current_user.sticker_max = 0

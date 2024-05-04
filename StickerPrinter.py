@@ -112,8 +112,13 @@ async def receive_sticker(update, context, application):
         return
 
     # === Print the Sticker === #
-    # Download sticker
-    sticker_file = await update.message.sticker.get_file()
+
+    if update.message.sticker is None:
+        # Download photo
+        sticker_file = await update.message.photo[-1].get_file()
+    else:
+        # Download sticker
+        sticker_file = await update.message.sticker.get_file()
 
     # Convert sticker to printable format
     print_image = await StickerCommands.convert_sticker(update, sticker_file, printer_cf)
