@@ -1,7 +1,7 @@
 from __future__ import annotations
 import pickle
 import logging
-from datetime import datetime
+from datetime import (datetime, timedelta)
 from typing import Dict
 
 from zebra import Zebra
@@ -98,9 +98,10 @@ async def receive_sticker(update, context, application):
     if not state_cf['bot_enabled']:
         return
 
-    # TODO: Fix this. Stickers print and bot responds to messages from before it has started.
     # Don't accept stickers if it was before the printer started.
-    if update.message.date.now() < bot_start_time:
+    # Messages that came in before have a datetime of shortly after the bot start time.
+    # Wait 1 second before accepting commands.
+    if update.message.date.now() < bot_start_time + timedelta(0, 1):
         return
 
     # Find user in the users list if exists. Otherwise, create a new one.
