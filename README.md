@@ -1,5 +1,5 @@
 # Telegram Sticker Printer
-A telegram bot that accepts stickers and prints them out on a black and white zebra printer. I use a secondhand QL320+ thermal printer for ultra cheap prints and the portable battery.
+A telegram bot that accepts stickers or photos and prints them out on a black and white zebra printer. I use a secondhand QL320+ thermal printer for ultra cheap prints and the portable battery.
 
 Confirmed to run on Windows or Linux (and theoretically on MacOS). I am currently running it on a Raspberry Pi Zero 2 W running Raspberry Pi OS (a Debian fork). With a portable battery and a phone WiFi hotspot, this build is completely portable.
 
@@ -14,6 +14,7 @@ A superuser can communicate with the bot through Telegram messages. These comman
 - Enable/disable random events
 - Reply to a monitored sticker to reset/adjust a specific user's sticker limit or ban them
 - Adjust print image offset and queue name
+- Save configuration
 
 # Config Handler
 When the script is run for the first time, it creates a default configuration. This config is used to change default settings but is also used to store the API key and super user ID.
