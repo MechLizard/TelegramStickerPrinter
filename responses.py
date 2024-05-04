@@ -106,6 +106,7 @@ General commands:
 \"{constants.EVENT_ON}\" - Turn on random events
 \"{constants.EVENT_OFF}\" - Turn off random events
 \"{constants.COMMANDS}\" - Displays this help message
+\"{constants.SAVE}\" - Save current settings to config file
 
 Printer commands:
 \"{constants.PRINT_OFFSET}\" - Displays the current print offset and displays commands for adjusting
