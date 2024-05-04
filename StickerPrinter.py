@@ -27,7 +27,6 @@ printer_cf = config['PRINTER']
 users_cf = config['USERS']
 state_cf = config['STATE']
 
-# TODO: Make a save command, to save current configuration
 # TODO: Properly comment the function of the functions
 
 printer = Zebra(printer_cf['printer_queue'])  # z = Zebra( [queue] )
@@ -75,7 +74,7 @@ async def receive_text(update, context):
         command = update.message.text.lower()
 
         if await TextCommands.super_user_command(update, context, command, users, printer,
-                                                 printer_cf, users_cf, state_cf):
+                                                 printer_cf, users_cf, state_cf, config):
             return
         else:
             await TextCommands.command_not_recognized(update, context)
@@ -129,7 +128,7 @@ async def receive_sticker(update, context, application):
                                    disable_web_page_preview=True,
                                    parse_mode="HTML")
 
-    # Random event
+    # Random event if enabled
     await StickerCommands.random_event(update, context, current_user, application, printer, state_cf, users_cf, printer_cf)
 
     # Send Sticker to superuser if enabled

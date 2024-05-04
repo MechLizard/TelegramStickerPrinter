@@ -2,9 +2,10 @@ import os
 
 from constants import *
 import responses
+import ConfigHandler
 
 
-async def super_user_command(update, context, command, users, printer, printer_cf, users_cf, state_cf) -> bool:
+async def super_user_command(update, context, command, users, printer, printer_cf, users_cf, state_cf, config) -> bool:
     # ==== Reply Commands ==== #
     if update.message.reply_to_message is not None:
         reply_message = update.message.reply_to_message
@@ -84,6 +85,10 @@ async def super_user_command(update, context, command, users, printer, printer_c
 
     # Enables/disables the random event
     if await toggle_random_event(update, context, command, state_cf):
+        return True
+
+    # Saves config
+    if await save_config(update, context, command, config):
         return True
 
     return False
@@ -307,8 +312,7 @@ async def set_print_offset(update, context, command, printer_cf) -> bool:
         if command_int is not None:
             printer_cf["image_offset_x"] = command_int
 
-            text = responses.SET_PRINT_OFFSET_X
-            text += str(printer_cf["image_offset_x"])
+            text = responses.SET_PRINT_OFFSET_X.format(offset_x=printer_cf["image_offset_x"])
 
             await context.bot.send_message(chat_id=update.effective_chat.id, text=text)
             return True
@@ -319,8 +323,7 @@ async def set_print_offset(update, context, command, printer_cf) -> bool:
         if command_int is not None:
             printer_cf["image_offset_y"] = command_int
 
-            text = responses.SET_PRINT_OFFSET_Y
-            text += str(printer_cf["image_offset_y"])
+            text = responses.SET_PRINT_OFFSET_Y.format(offset_y=printer_cf["image_offset_y"])
 
             await context.bot.send_message(chat_id=update.effective_chat.id, text=text)
             return True
@@ -401,6 +404,17 @@ async def toggle_random_event(update, context, command, state_cf) -> bool:
         return True
 
     return False
+
+
+async def save_config(update, context, command, config) -> bool:
+    if command != SAVE:
+        return False
+
+    ConfigHandler.save_config(config)
+    text = responses.CONFIG_SAVED
+    await context.bot.send_message(chat_id=update.effective_chat.id, text=text)
+
+    return True
 
 
 async def command_not_recognized(update, context):

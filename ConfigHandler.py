@@ -32,72 +32,74 @@ def get_default_config():
     return default_config
 
 
-def create_config(conf_info):
+def save_config(config_info):
     config = configparser.ConfigParser(allow_no_value=True)
 
-    # Convert all the values to strings. ConfigParser requires this
-    for outer_key, inner_dict in conf_info.items():
+    # Copy and convert all the values to strings. ConfigParser requires this
+    save_conf = config_info.copy()
+    for outer_key, inner_dict in config_info.items():
+        save_conf[outer_key] = inner_dict.copy()
         for inner_key, inner_value in inner_dict.items():
-            inner_dict[inner_key] = str(inner_value)
+            save_conf[outer_key][inner_key] = str(inner_value)
 
     # SETUP section
     config.add_section('SETUP')
     config.set('SETUP', '# The token you got from Telegram\'s BotFather as a string', None)
-    config.set('SETUP', 'TELEGRAM_API_TOKEN', conf_info['SETUP']['telegram_api_token'])
+    config.set('SETUP', 'TELEGRAM_API_TOKEN', save_conf['SETUP']['telegram_api_token'])
 
     config.set('SETUP', '# The ID of the user that is allowed to give moderator commands. Can add multiple, each separated by a comma. A list of ints (can be one)', None)
-    config.set('SETUP', 'SUPER_USER_ID', conf_info['SETUP']['super_user_id'])
+    config.set('SETUP', 'SUPER_USER_ID', save_conf['SETUP']['super_user_id'])
 
     config.set('SETUP', '# When sending a text message to the bot, will it respond with your chat ID? Used to get your ID to set the SUPER_USER_ID', None)
-    config.set('SETUP', 'ECHO_CHAT_ID', conf_info['SETUP']['echo_chat_id'])
+    config.set('SETUP', 'ECHO_CHAT_ID', save_conf['SETUP']['echo_chat_id'])
 
     # PRINTER section
     config.add_section('PRINTER')
     config.set('PRINTER', '# The name of the printer queue. Use the "printers" command to get a list of printer queues on the host.', None)
-    config.set('PRINTER', 'PRINTER_QUEUE', conf_info['PRINTER']['printer_queue'])
+    config.set('PRINTER', 'PRINTER_QUEUE', save_conf['PRINTER']['printer_queue'])
 
     config.set('PRINTER', '# Real size of the physical sticker in inches - Width', None)
-    config.set('PRINTER', 'MEDIA_IN_X', conf_info['PRINTER']['media_in_x'])
+    config.set('PRINTER', 'MEDIA_IN_X', save_conf['PRINTER']['media_in_x'])
 
     config.set('PRINTER', '# Real size of the physical sticker in inches - Height', None)
-    config.set('PRINTER', 'MEDIA_IN_Y', conf_info['PRINTER']['media_in_y'])
+    config.set('PRINTER', 'MEDIA_IN_Y', save_conf['PRINTER']['media_in_y'])
 
     config.set('PRINTER', '# Dots per inch of the printer (DPI). Should be displayed on the printer\'s sal', None)
-    config.set('PRINTER', 'DPI', conf_info['PRINTER']['dpi'])
+    config.set('PRINTER', 'DPI', save_conf['PRINTER']['dpi'])
 
     config.set('PRINTER', '# The gap between stickers measured in millimeters', None)
-    config.set('PRINTER', 'MEDIA_GAP_MM', conf_info['PRINTER']['media_gap_mm'])
+    config.set('PRINTER', 'MEDIA_GAP_MM', save_conf['PRINTER']['media_gap_mm'])
 
     config.set('PRINTER', '# Amount of pixels to offset the image if it isn\'t centered correctly - X', None)
-    config.set('PRINTER', 'IMAGE_OFFSET_X', conf_info['PRINTER']['image_offset_x'])
+    config.set('PRINTER', 'IMAGE_OFFSET_X', save_conf['PRINTER']['image_offset_x'])
 
     config.set('PRINTER', '# Amount of pixels to offset the image if it isn\'t centered correctly - Y', None)
-    config.set('PRINTER', 'IMAGE_OFFSET_Y', conf_info['PRINTER']['image_offset_y'])
+    config.set('PRINTER', 'IMAGE_OFFSET_Y', save_conf['PRINTER']['image_offset_y'])
 
     # USERS section
     config.add_section('USERS')
     config.set('USERS', '# The max stickers the users get', None)
-    config.set('USERS', 'STICKER_LIMIT', conf_info['USERS']['sticker_limit'])
+    config.set('USERS', 'STICKER_LIMIT', save_conf['USERS']['sticker_limit'])
 
     config.set('USERS', '# Ignores the above limit. Does not limit stickers', None)
-    config.set('USERS', 'UNLIMITED_STICKERS', conf_info['USERS']['unlimited_stickers'])
+    config.set('USERS', 'UNLIMITED_STICKERS', save_conf['USERS']['unlimited_stickers'])
 
     config.set('USERS', '# From 0 to 1. Determines which point the random events should start. Percentage of stickers left before events happen.', None)
-    config.set('USERS', 'RAN_EVENT_START', conf_info['USERS']['ran_event_start'])
+    config.set('USERS', 'RAN_EVENT_START', save_conf['USERS']['ran_event_start'])
 
     config.set('USERS', '# From 0 to 100. Percent chance for random events to happen when enabled', None)
-    config.set('USERS', 'RAN_EVENT_CHANCE', conf_info['USERS']['ran_event_chance'])
+    config.set('USERS', 'RAN_EVENT_CHANCE', save_conf['USERS']['ran_event_chance'])
 
     # STATE section
     config.add_section('STATE')
     config.set('STATE', '# Whether the bot is enabled at the start', None)
-    config.set('STATE', 'BOT_ENABLED', conf_info['STATE']['bot_enabled'])
+    config.set('STATE', 'BOT_ENABLED', save_conf['STATE']['bot_enabled'])
 
     config.set('STATE', '# Whether sticker monitoring is enabled at the start', None)
-    config.set('STATE', 'STICKER_MONITORING', conf_info['STATE']['sticker_monitoring'])
+    config.set('STATE', 'STICKER_MONITORING', save_conf['STATE']['sticker_monitoring'])
 
     config.set('STATE', '# Whether the random event is enabled at the start', None)
-    config.set('STATE', 'EVENT', conf_info['STATE']['event'])
+    config.set('STATE', 'EVENT', save_conf['STATE']['event'])
 
     with open('BotConfig.ini', 'w') as configfile:
         config.write(configfile)
@@ -115,7 +117,7 @@ def read_config():
             config_dict[section] = dict(config[section])
     except IOError:
         config_dict = get_default_config()
-        create_config(config_dict)
+        save_config(config_dict)
 
     config.read('BotConfig.ini')
 

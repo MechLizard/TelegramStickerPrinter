@@ -58,3 +58,6 @@ LIST_QUEUES = "list queues"
 
 # Sets the print queue to your specification
 SET_QUEUE = "set queue"
+
+# Saves configuration
+SAVE = "save"
