@@ -1,17 +1,32 @@
 import io
 import os
 import random
+from typing import Dict, Union
 
 import zpl
+from zebra import Zebra
 from PIL import Image
 from pyrlottie import (LottieFile,
                        convSingleLottieFrames)
+from telegram import (Update, File)
+from telegram.ext import (ContextTypes, Application)
+
 
 from user import User
 import responses
 
 
-def get_user(update, users, users_cf) -> User:
+def get_user(update: Update, users: Dict[int, User], users_cf: Dict[str, Union[int, bool]]) -> User:
+    """ Finds a user in the users Dict and returns them.
+    Adds a new user to the dict if not found and returns that.
+
+        :param update: Update object containing the sent message.
+        :param users: A dict containing the users, found by user ID.
+        :param users_cf: Dict of configuration settings relating to users.
+
+        :returns: A User object containing the user.
+    """
+
     # Find user in the users list
     current_user = users.get(update.message.from_user.id)
     if current_user is None:
@@ -21,8 +36,16 @@ def get_user(update, users, users_cf) -> User:
     return current_user
 
 
-async def limit_exceeded(update, context, current_user) -> bool:
-    # Error if user has no stickers left
+async def limit_exceeded(update: Update, context: ContextTypes.DEFAULT_TYPE, current_user: User) -> bool:
+    """ Displays an error to the user if their sticker limit is exceeded.
+
+        :param update: Update object containing the sent message.
+        :param context: Object containing the bot interface for the current chat.
+        :param current_user: A User object containing the user the operation is being performed on.
+
+        :returns: A bool whether the user's limit is exceeded.
+        """
+
     if current_user.sticker_count >= current_user.sticker_max:
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
@@ -33,9 +56,18 @@ async def limit_exceeded(update, context, current_user) -> bool:
     return False
 
 
-async def convert_sticker(update, sticker_file, printer_cf) -> Image:
-    # Converts the sticker in to a format the printer can accept.
+async def convert_sticker(update: Update, sticker_file: File, printer_cf: Dict[str, Union[str, int]]) -> Image:
+    """ Converts the downloaded sticker or picture to a format the printer can accept
+
+        :param update: Update object containing the sent message.
+        :param sticker_file: The unprocessed downloaded image sent to the bot.
+        :param printer_cf: Dict of configuration settings relating to the printer.
+
+        :returns: A PIL Image file containing the printable image.
+        """
+
     if update.message.sticker is not None and update.message.sticker.is_animated:
+        # Animated Sticker
         # For pyrlottie to convert animated images, it must be saved to disk.
         await sticker_file.download_to_drive(os.getcwd() + r"\animStickerBuff.tgs")
         g_lottie_file = LottieFile(os.getcwd() + r"\animStickerBuff.tgs")
@@ -49,7 +81,7 @@ async def convert_sticker(update, sticker_file, printer_cf) -> Image:
         incoming_sticker = g_lottie_frames[list(g_lottie_frames)[0]].frames[0]
         incoming_sticker = incoming_sticker.convert("RGBA")
     else:
-        # Static sticker
+        # Static sticker or Image
         sticker_buffer = io.BytesIO(b"")  # Create a memory buffer for the sticker to be downloaded to
         await sticker_file.download_to_memory(sticker_buffer)  # Download sticker
         incoming_sticker = Image.open(sticker_buffer).convert("RGBA")  # Create Image object
@@ -78,7 +110,20 @@ async def convert_sticker(update, sticker_file, printer_cf) -> Image:
     return print_image
 
 
-async def random_event(update, context, current_user, application, printer, state_cf, users_cf, printer_cf):
+async def random_event(update: Update, context: ContextTypes.DEFAULT_TYPE, current_user: User, application: Application,
+                       printer: Zebra, state_cf: Dict[str, bool], users_cf: Dict[str, Union[int, bool]],
+                       printer_cf: Dict[str, Union[str, int]]):
+    """ If the right conditions are met, print a 'bonus' sticker from a pre-prepared sticker pack
+
+        :param update: Update object containing the sent message.
+        :param context: Object containing the bot interface for the current chat.
+        :param current_user: A User object containing the user the operation is being performed on.
+        :param application: object containing the general bot interface.
+        :param printer: The Zebra printer object.
+        :param state_cf: Dict of configuration settings relating to the state of the script.
+        :param users_cf: Dict of configuration settings relating to users.
+        :param printer_cf: Dict of configuration settings relating to the printer.
+        """
 
     # If random events are disabled, return.
     if not state_cf['event']:
@@ -106,7 +151,15 @@ async def random_event(update, context, current_user, application, printer, stat
             sticker_buffer.close()
 
 
-async def forward_to_superuser(update, current_user, setup_cf, state_cf):
+async def forward_to_superuser(update: Update, current_user: ContextTypes.DEFAULT_TYPE,
+                               setup_cf: Dict[str, Union[str, list, bool]], state_cf: Dict[str, bool]):
+    """ If enabled, forwards the image to the superusers
+
+        :param update: Update object containing the sent message.
+        :param current_user: A User object containing the user the operation is being performed on.
+        :param setup_cf: Dict of api token and superuser IDs.
+        :param state_cf: Dict of configuration settings relating to the state of the script.
+        """
     # forward Sticker to superusers if its enabled
     if state_cf['sticker_monitoring']:
         for i in setup_cf['super_user_id']:
@@ -114,10 +167,13 @@ async def forward_to_superuser(update, current_user, setup_cf, state_cf):
             current_user.log_message(forwarded_message.id)
 
 
-def print_sticker(print_image, printer, printer_cf):
-    # Takes a sticker object and prints it.
-    # Input: A PIL Image object converted to RGBA format
-    # Output: A print job sent to the Zebra printer queue in the config
+def print_sticker(print_image: Image, printer: Zebra, printer_cf: Dict[str, Union[str, int]]):
+    """ Takes an image and sends it to the specified print queue in the printer object
+
+        :param print_image: The PIL Image object that is already converted to printable format via convert_sticker
+        :param printer: The Zebra printer object
+        :param printer_cf: Dict of configuration settings relating to the printer.
+        """
 
     print_command_gen = zpl.Label(printer_cf['media_mm_x'], printer_cf['media_mm_y'], printer_cf['dpmm'])
     # sticker_img.show()  # Can be used to display the sticker on the host

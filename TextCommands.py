@@ -1,11 +1,34 @@
 import os
+from typing import Dict, Union
+
+from zebra import Zebra
+from telegram import Update
+from telegram.ext import ContextTypes
 
 from constants import *
 import responses
 import ConfigHandler
 
+from user import User
 
-async def super_user_command(update, context, command, users, printer, printer_cf, users_cf, state_cf, config) -> bool:
+
+async def super_user_command(update: Update, context: ContextTypes.DEFAULT_TYPE, command: str, users: Dict[int, User],
+                             printer: Zebra, printer_cf, users_cf, state_cf, config: Dict) -> bool:
+    """ Takes a command sent by a user, determines if it's a superuser.
+        If it is a superuser, check whether the messages match a command. If so, run that command.
+
+        :param update: Update object containing the sent message.
+        :param context: Object containing the bot interface for the current chat.
+        :param command: The text command sent by the user
+        :param users: A dict containing the users, found by user ID.
+        :param printer: The Zebra printer object.
+        :param printer_cf: Dict of configuration settings relating to the printer.
+        :param users_cf: Dict of configuration settings relating to users.
+        :param state_cf: Dict of configuration settings relating to the state of the script.
+        :param config: The Dict containing the rest of the _cf configuration dictionaries.
+
+        :returns: A bool indicating whether the message matches a command.
+        """
     # ==== Reply Commands ==== #
     if update.message.reply_to_message is not None:
         reply_message = update.message.reply_to_message
@@ -94,7 +117,16 @@ async def super_user_command(update, context, command, users, printer, printer_c
     return False
 
 
-async def no_super_users(update, context, setup_cf) -> bool:
+async def no_super_users(update: Update, context: ContextTypes.DEFAULT_TYPE,
+                         setup_cf: Dict[str, Union[str, list, bool]]) -> bool:
+    """ Checks whether there is a superuser. If not, tells the user what their user_id is.
+
+        :param update: Update object containing the sent message.
+        :param context: Object containing the bot interface for the current chat.
+        :param setup_cf: Dict of api token and superuser IDs.
+
+        :returns: A bool indicating whether the message triggers this function.
+        """
     if len(setup_cf['super_user_id']) == 0 and update.message.text.lower() == COMMANDS:
         text = responses.SUPERUSER_NOT_SET.format(id=update.message.from_user.id)
         await context.bot.send_message(chat_id=update.effective_chat.id, text=text)
@@ -106,12 +138,18 @@ async def no_super_users(update, context, setup_cf) -> bool:
 # ========================= #
 # ======= Functions ======= #
 # ========================= #
-def get_command_int(command, user_response):
-    # For commands that require a command and a number. This is for checking if its valid and to return that number
-    # Input:
-        # Command: The command that the program expects
-        # user_response: the full text of what the user sent
-    # Output: None if the response is bad. Int if the response is good
+def get_command_int(command: str, user_response: str) -> Union[int, None]:
+    """ Gets the number part of a command and check if it's in a valid format.
+        Used with commands that require a command and a number.
+        Ex: 'setlimit 10' returns 10
+        Ex: '+5' returns 5
+        Ex: 'setlimit 10 asdfs' returns None
+
+        :param command: The text part of the command from the module
+        :param user_response: The full message from the user
+
+        :returns: An int representing the amount if it was successful. None if the format was incorrect.
+        """
 
     modifier = False
 
@@ -141,29 +179,55 @@ def get_command_int(command, user_response):
     return number
 
 
-async def user_limit_adjust(update, context, command, current_user) -> bool:
+async def user_limit_adjust(update: Update, context: ContextTypes.DEFAULT_TYPE,
+                            command: str, current_user: User) -> bool:
+    """ Reply command. Adjusts a specific user's sticker limit
+        Ex: When replying to a monitored sticker use '+5' or '-2' or '=999' to change limit
+
+        :param update: Update object containing the sent message.
+        :param context: Object containing the bot interface for the current chat.
+        :param command: The text command sent by the user.
+        :param current_user: A User object containing the user the operation is being performed on.
+
+        :returns: A bool indicating whether the message triggers this function.
+        """
+
     # Add or subtract sticker limit (Ex: +5 or -2 or =999 to change limit)
-    if command[1:].isdigit():
-        if command.startswith("+"):
-            current_user.sticker_max += int(command[1:])
-            text = responses.ADD_USER_LIMIT.format(amount=int(command[1:]),
-                                                   total=current_user.sticker_max)
-            await context.bot.send_message(chat_id=update.effective_chat.id, text=text)
-            return True
-        if command.startswith("-"):
-            current_user.sticker_max -= int(command[1:])
-            text = responses.SUBTRACT_USER_LIMIT.format(amount=int(command[1:]),
-                                                        total=current_user.sticker_max)
-            await context.bot.send_message(chat_id=update.effective_chat.id, text=text)
-            return True
-        if command.startswith("="):
-            current_user.sticker_max = int(command[1:])
-            text = responses.SET_USER_LIMIT.format(total=current_user.sticker_max)
-            await context.bot.send_message(chat_id=update.effective_chat.id, text=text)
-            return True
+    if not command[1:].isdigit():
+        return False
+
+    if command.startswith("+"):
+        current_user.sticker_max += int(command[1:])
+        text = responses.ADD_USER_LIMIT.format(amount=int(command[1:]),
+                                               total=current_user.sticker_max)
+        await context.bot.send_message(chat_id=update.effective_chat.id, text=text)
+        return True
+    if command.startswith("-"):
+        current_user.sticker_max -= int(command[1:])
+        text = responses.SUBTRACT_USER_LIMIT.format(amount=int(command[1:]),
+                                                    total=current_user.sticker_max)
+        await context.bot.send_message(chat_id=update.effective_chat.id, text=text)
+        return True
+    if command.startswith("="):
+        current_user.sticker_max = int(command[1:])
+        text = responses.SET_USER_LIMIT.format(total=current_user.sticker_max)
+        await context.bot.send_message(chat_id=update.effective_chat.id, text=text)
+        return True
+
+    return False
 
 
-async def ban_reset(update, context, command, current_user) -> bool:
+async def ban_reset(update: Update, context: ContextTypes.DEFAULT_TYPE, command: str, current_user: User) -> bool:
+    """ Reply command. Ban (set user's sticker limit to 0) and reset (set user's sticker count to 0) commands.
+
+        :param update: Update object containing the sent message.
+        :param context: Object containing the bot interface for the current chat.
+        :param command: The text command sent by the user.
+        :param current_user: A User object containing the user the operation is being performed on.
+
+        :returns: A bool indicating whether the message triggers this function.
+        """
+
     # ban
     if command == BAN:
         current_user.sticker_max = 0
@@ -172,14 +236,22 @@ async def ban_reset(update, context, command, current_user) -> bool:
     # reset
     if command == RESET:
         current_user.sticker_count = 0
-        text = responses.USER_LIMIT_RESET + str(current_user.sticker_max) + " stickers"
+        text = responses.USER_LIMIT_RESET.format(amount=str(current_user.sticker_max))
         await context.bot.send_message(chat_id=update.effective_chat.id, text=text)
         return True
 
     return False
 
 
-async def list_commands(update, context, command):
+async def list_commands(update: Update, context: ContextTypes.DEFAULT_TYPE, command: str):
+    """ Displays the list of commands
+
+        :param update: Update object containing the sent message.
+        :param context: Object containing the bot interface for the current chat.
+        :param command: The text command sent by the user.
+
+        :returns: A bool indicating whether the message triggers this function.
+        """
     if command == COMMANDS:
         text = responses.COMMANDS
         await context.bot.send_message(chat_id=update.effective_chat.id, text=text)
@@ -188,7 +260,16 @@ async def list_commands(update, context, command):
     return False
 
 
-async def reset_all(update, context, command, users) -> bool:
+async def reset_all(update: Update, context: ContextTypes.DEFAULT_TYPE, command: str, users: Dict[int, User]) -> bool:
+    """ Displays the list of commands
+
+        :param update: Update object containing the sent message.
+        :param context: Object containing the bot interface for the current chat.
+        :param command: The text command sent by the user.
+        :param users: A dict containing the users, found by user ID.
+
+        :returns: A bool indicating whether the message triggers this function.
+        """
     if command == RESET_ALL_COUNT:
         for key, value in users.items():
             value.sticker_count = 0
@@ -197,23 +278,44 @@ async def reset_all(update, context, command, users) -> bool:
     return False
 
 
-async def wipe(update, context, command, users) -> bool:
-    if command == WIPE:
-        users.clear()
-        try:
-            os.remove("limit_tracker.p")
-            await context.bot.send_message(chat_id=update.effective_chat.id, text=responses.USERS_WIPED)
-        except FileNotFoundError:
-            await context.bot.send_message(chat_id=update.effective_chat.id, text=responses.NO_FILE)
-        except OSError:
-            await context.bot.send_message(chat_id=update.effective_chat.id, text=responses.CANT_DELETE_FILE)
-        return True
+async def wipe(update: Update, context: ContextTypes.DEFAULT_TYPE, command: str, users: Dict[int, User]) -> bool:
+    """ Wipes the data on all users, starts over fresh.
 
-    return False
+        :param update: Update object containing the sent message.
+        :param context: Object containing the bot interface for the current chat.
+        :param command: The text command sent by the user.
+        :param users: A dict containing the users, found by user ID.
+
+        :returns: A bool indicating whether the message triggers this function.
+        """
+
+    if command != WIPE:
+        return False
+
+    users.clear()
+    try:
+        os.remove("limit_tracker.p")
+        await context.bot.send_message(chat_id=update.effective_chat.id, text=responses.USERS_WIPED)
+    except FileNotFoundError:
+        await context.bot.send_message(chat_id=update.effective_chat.id, text=responses.NO_FILE)
+    except OSError:
+        await context.bot.send_message(chat_id=update.effective_chat.id, text=responses.CANT_DELETE_FILE)
+    return True
 
 
-async def set_limit(update, context, command, users, users_cf) -> bool:
-    # Set all limits to X
+async def set_limit(update: Update, context: ContextTypes.DEFAULT_TYPE, command: str, users: Dict[int, User],
+                    users_cf: Dict[str, Union[int, bool]]) -> bool:
+    """ Sets all user's sticker limits to X
+
+        :param update: Update object containing the sent message.
+        :param context: Object containing the bot interface for the current chat.
+        :param command: The text command sent by the user.
+        :param users: A dict containing the users, found by user ID.
+        :param users_cf: Dict of configuration settings relating to users.
+
+        :returns: A bool indicating whether the message triggers this function.
+        """
+
     # Command has 3 parts: The command, a space, and a digit
     if not command.startswith(SET_ALL_LIMIT):  # Command starts with the limit command
         return False
@@ -227,20 +329,45 @@ async def set_limit(update, context, command, users, users_cf) -> bool:
     for key, value in users.items():
         value.sticker_max = command_int
     users_cf['sticker_limit'] = command_int
-    text = responses.SET_NEW_LIMIT + str(command_int)
+    text = responses.SET_NEW_LIMIT.format(amount=str(command_int))
     await context.bot.send_message(chat_id=update.effective_chat.id, text=text)
     return True
 
 
-async def get_limit(update, context, command, users_cf) -> bool:
-    if command == GET_LIMIT:
-        text = responses.GET_LIMIT + str(users_cf['sticker_limit'])
-        await context.bot.send_message(chat_id=update.effective_chat.id, text=text)
-        return True
-    return False
+async def get_limit(update: Update, context: ContextTypes.DEFAULT_TYPE, command: str,
+                    users_cf: Dict[str, Union[int, bool]]) -> bool:
+    """ Gets the current sticker limit
+
+        :param update: Update object containing the sent message.
+        :param context: Object containing the bot interface for the current chat.
+        :param command: The text command sent by the user.
+        :param users_cf: Dict of configuration settings relating to users.
+
+        :returns: A bool indicating whether the message triggers this function.
+        """
+
+    if command != GET_LIMIT:
+        return False
+
+    text = responses.GET_LIMIT.format(amount=str(users_cf['sticker_limit']))
+    await context.bot.send_message(chat_id=update.effective_chat.id, text=text)
+    return True
 
 
-async def toggle_bot(update, context, command, printer, state_cf, printer_cf) -> bool:
+async def toggle_bot(update: Update, context: ContextTypes.DEFAULT_TYPE, command: str, printer: Zebra,
+                     state_cf: Dict[str, bool], printer_cf: Dict[str, Union[str, int]]) -> bool:
+    """ Turns the bot on or off. Superuser commands can still be sent, but the bot will not respond anything else.
+
+        :param update: Update object containing the sent message.
+        :param context: Object containing the bot interface for the current chat.
+        :param command: The text command sent by the user.
+        :param printer: The Zebra printer object.
+        :param state_cf: Dict of configuration settings relating to the state of the script.
+        :param printer_cf: Dict of configuration settings relating to the printer.
+
+        :returns: A bool indicating whether the message triggers this function.
+        """
+
     # Turn off bot
     if command == BOT_DISABLE:
         if state_cf['bot_enabled']:
@@ -269,7 +396,18 @@ async def toggle_bot(update, context, command, printer, state_cf, printer_cf) ->
     return False
 
 
-async def toggle_monitoring(update, context, command, state_cf) -> bool:
+async def toggle_monitoring(update: Update, context: ContextTypes.DEFAULT_TYPE, command: str,
+                            state_cf: Dict[str, bool]) -> bool:
+    """ Turns sticker monitoring on or off. Determines whether stickers that are printed are forwarded to superusers
+
+        :param update: Update object containing the sent message.
+        :param context: Object containing the bot interface for the current chat.
+        :param command: The text command sent by the user.
+        :param state_cf: Dict of configuration settings relating to the state of the script.
+
+        :returns: A bool indicating whether the message triggers this function.
+        """
+
     # Turn off sticker monitoring
     if command == STICKER_MONITORING_OFF:
         if state_cf['sticker_monitoring']:
@@ -293,8 +431,18 @@ async def toggle_monitoring(update, context, command, state_cf) -> bool:
     return False
 
 
-async def get_print_offset(update, context, command, printer_cf) -> bool:
-    # Display print offset and list commands
+async def get_print_offset(update: Update, context: ContextTypes.DEFAULT_TYPE, command: str,
+                           printer_cf: Dict[str, Union[str, int]]) -> bool:
+    """ Displays print offset and lists commands
+
+        :param update: Update object containing the sent message.
+        :param context: Object containing the bot interface for the current chat.
+        :param command: The text command sent by the user.
+        :param printer_cf: Dict of configuration settings relating to the printer.
+
+        :returns: A bool indicating whether the message triggers this function.
+        """
+
     if command == PRINT_OFFSET:
         text = responses.PRINT_OFFSET.format(offset_x=printer_cf["image_offset_x"],
                                              offset_y=printer_cf["image_offset_y"])
@@ -305,7 +453,18 @@ async def get_print_offset(update, context, command, printer_cf) -> bool:
     return False
 
 
-async def set_print_offset(update, context, command, printer_cf) -> bool:
+async def set_print_offset(update: Update, context: ContextTypes.DEFAULT_TYPE, command: str,
+                           printer_cf: Dict[str, Union[str, int]]) -> bool:
+    """ Sets a new x or y print offset
+
+        :param update: Update object containing the sent message.
+        :param context: Object containing the bot interface for the current chat.
+        :param command: The text command sent by the user.
+        :param printer_cf: Dict of configuration settings relating to the printer.
+
+        :returns: A bool indicating whether the message triggers this function.
+        """
+
     # Set the x (Horizontal) print offset
     if command.startswith(PRINT_OFFSET_X):
         command_int = get_command_int(PRINT_OFFSET_X, command)
@@ -331,58 +490,99 @@ async def set_print_offset(update, context, command, printer_cf) -> bool:
     return False
 
 
-async def check_queue(update, context, command, printer, printer_cf) -> bool:
-    # Display the current queue and checks if it exists on the system
-    if command == CHECK_QUEUE:
-        if printer_cf['printer_queue'] == '':
-            text = responses.CHECK_QUEUE_NO_QUEUE
-        elif printer_cf['printer_queue'].lower() in (queue.lower() for queue in printer.getqueues()):
-            text = responses.CHECK_QUEUE_SUCCESS.format(print_queue=printer_cf['printer_queue'])
+async def check_queue(update: Update, context: ContextTypes.DEFAULT_TYPE, command: str,
+                      printer: Zebra, printer_cf: Dict[str, Union[str, int]]) -> bool:
+    """ Display the current queue and checks if it exists on the system
+
+        :param update: Update object containing the sent message.
+        :param context: Object containing the bot interface for the current chat.
+        :param command: The text command sent by the user.
+        :param printer: The Zebra printer object.
+        :param printer_cf: Dict of configuration settings relating to the printer.
+
+        :returns: A bool indicating whether the message triggers this function.
+        """
+
+    if command != CHECK_QUEUE:
+        return False
+
+    if printer_cf['printer_queue'] == '':
+        text = responses.CHECK_QUEUE_NO_QUEUE
+    elif printer_cf['printer_queue'].lower() in (queue.lower() for queue in printer.getqueues()):
+        text = responses.CHECK_QUEUE_SUCCESS.format(print_queue=printer_cf['printer_queue'])
+    else:
+        text = responses.CHECK_QUEUE_FAIL
+
+    await context.bot.send_message(chat_id=update.effective_chat.id, text=text)
+    return True
+
+
+async def list_queues(update: Update, context: ContextTypes.DEFAULT_TYPE, command: str, printer: Zebra) -> bool:
+    """ Lists the print queues on the device
+
+        :param update: Update object containing the sent message.
+        :param context: Object containing the bot interface for the current chat.
+        :param command: The text command sent by the user.
+        :param printer: The Zebra printer object.
+
+        :returns: A bool indicating whether the message triggers this function.
+        """
+
+    if command != LIST_QUEUES:
+        return False
+
+    if len(printer.getqueues()) > 0:
+        text = responses.LIST_QUEUES + "\n"
+        for i in printer.getqueues():
+            text += i + "\n"
+    else:
+        text = responses.LIST_QUEUES_NO_QUEUES
+
+    await context.bot.send_message(chat_id=update.effective_chat.id, text=text)
+    return True
+
+
+async def set_queue(update: Update, context: ContextTypes.DEFAULT_TYPE, command: str, printer: Zebra,
+                    printer_cf: Dict[str, Union[str, int]]) -> bool:
+    """ Changes the printer queue to the one specified
+
+        :param update: Update object containing the sent message.
+        :param context: Object containing the bot interface for the current chat.
+        :param command: The text command sent by the user.
+        :param printer: The Zebra printer object.
+        :param printer_cf: Dict of configuration settings relating to the printer.
+
+        :returns: A bool indicating whether the message triggers this function.
+        """
+
+    if not command.startswith(SET_QUEUE):
+        return False
+
+    if command[len(SET_QUEUE)] == " " and len(command[len(SET_QUEUE) + 1:]) > 1:
+        if command[len(SET_QUEUE) + 1:] in (queue.lower() for queue in printer.getqueues()):
+            printer_cf['printer_queue'] = command[len(SET_QUEUE) + 1:]
+            text = responses.SET_QUEUE_SUCCESS
         else:
-            text = responses.CHECK_QUEUE_FAIL
+            text = responses.SET_QUEUE_BAD_QUEUE
+    else:
+        text = responses.SET_QUEUE_SYNTAX_ERROR
 
-        await context.bot.send_message(chat_id=update.effective_chat.id, text=text)
-        return True
-
-    return False
-
-
-async def list_queues(update, context, command, printer) -> bool:
-    # Lists the print queues on the device
-    if command == LIST_QUEUES:
-        if len(printer.getqueues()) > 0:
-            text = responses.LIST_QUEUES + "\n"
-            for i in printer.getqueues():
-                text += i + "\n"
-        else:
-            text = responses.LIST_QUEUES_NO_QUEUES
-
-        await context.bot.send_message(chat_id=update.effective_chat.id, text=text)
-        return True
-
-    return False
+    await context.bot.send_message(chat_id=update.effective_chat.id, text=text)
+    return True
 
 
-async def set_queue(update, context, command, printer, printer_cf) -> bool:
-    # Sets the print queue to your specification
-    if command.startswith(SET_QUEUE):
+async def toggle_random_event(update: Update, context: ContextTypes.DEFAULT_TYPE, command: str,
+                              state_cf: Dict[str, bool]) -> bool:
+    """ Enables/disables random events
 
-        if command[len(SET_QUEUE)] == " " and len(command[len(SET_QUEUE) + 1:]) > 1:
-            if command[len(SET_QUEUE) + 1:] in (queue.lower() for queue in printer.getqueues()):
-                printer_cf['printer_queue'] = command[len(SET_QUEUE) + 1:]
-                text = responses.SET_QUEUE_SUCCESS
-            else:
-                text = responses.SET_QUEUE_BAD_QUEUE
-        else:
-            text = responses.SET_QUEUE_SYNTAX_ERROR
+        :param update: Update object containing the sent message.
+        :param context: Object containing the bot interface for the current chat.
+        :param command: The text command sent by the user.
+        :param state_cf: Dict of configuration settings relating to the state of the script.
 
-        await context.bot.send_message(chat_id=update.effective_chat.id, text=text)
-        return True
+        :returns: A bool indicating whether the message triggers this function.
+        """
 
-    return False
-
-
-async def toggle_random_event(update, context, command, state_cf) -> bool:
     # Turn on random events
     if command == EVENT_ON:
         if state_cf['event']:
@@ -406,7 +606,16 @@ async def toggle_random_event(update, context, command, state_cf) -> bool:
     return False
 
 
-async def save_config(update, context, command, config) -> bool:
+async def save_config(update: Update, context: ContextTypes.DEFAULT_TYPE, command: str, config: Dict) -> bool:
+    """ Enables/disables random events
+
+        :param update: Update object containing the sent message.
+        :param context: Object containing the bot interface for the current chat.
+        :param command: The text command sent by the user.
+        :param config: The Dict containing the rest of the _cf configuration dictionaries.
+
+        :returns: A bool indicating whether the message triggers this function.
+        """
     if command != SAVE:
         return False
 
@@ -417,7 +626,12 @@ async def save_config(update, context, command, config) -> bool:
     return True
 
 
-async def command_not_recognized(update, context):
+async def command_not_recognized(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """ Displays a command not recognized error. Triggers when a user's message doesn't match any other commands.
+
+        :param update: Update object containing the sent message.
+        :param context: Object containing the bot interface for the current chat.
+        """
     text = responses.COMMAND_NOT_RECOGNIZED
     await context.bot.send_message(chat_id=update.effective_chat.id, text=text)
     return

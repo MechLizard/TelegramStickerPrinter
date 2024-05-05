@@ -5,6 +5,8 @@ from datetime import (datetime, timedelta)
 from typing import Dict
 
 from zebra import Zebra
+from telegram import Update
+from telegram.ext import (ContextTypes, ApplicationBuilder, Application)
 
 import responses
 from user import User
@@ -27,7 +29,7 @@ printer_cf = config['PRINTER']
 users_cf = config['USERS']
 state_cf = config['STATE']
 
-# TODO: Properly comment the function of the functions
+# TODO: Properly comment the function of the functions and give type hints
 
 printer = Zebra(printer_cf['printer_queue'])  # z = Zebra( [queue] )
 try:
@@ -54,19 +56,28 @@ except FileNotFoundError:
 
 
 # =============================== #
-# ======= Async Functions ======= #
+# ========== Functions ========== #
 # =============================== #
-async def start(update, context):
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """ Greets the user and informs them of how many stickers they have
+
+    :param update: Update object containing the sent message.
+    :param context: Object containing the bot interface for the current chat.
+    """
+
     if not state_cf['bot_enabled']:
         return
-
-    text = responses.GREETING + "\n\n" + "You have " + str(users_cf['sticker_limit']) + " stickers left."
+    text = responses.GREETING.format(amount=str(users_cf['sticker_limit']))
     await context.bot.send_message(chat_id=update.effective_chat.id, text=text)
 
 
-async def receive_text(update, context):
-    # Triggers when a text message is received
-    # Used to interact with superuser commands.
+async def receive_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """ Handles incoming text messages and commands, usually superuser commands to manage the bot
+
+        :param update: Update object containing the sent message.
+        :param context: Object containing the bot interface for the current chat.
+    """
+
     global users
 
     # ==== Superuser commands ==== #
@@ -89,7 +100,13 @@ async def receive_text(update, context):
         # await context.bot.send_message(chat_id=update.effective_chat.id, text=text)
 
 
-async def receive_sticker(update, context, application):
+async def receive_sticker(update: Update, context: ContextTypes.DEFAULT_TYPE, application: Application):
+    """ Handles incoming text messages and commands, usually superuser commands to manage the bot
+
+        :param update: Update object containing the sent message.
+        :param context: Object containing the bot interface for the current chat.
+        :param application: object containing the general bot interface
+    """
     # Triggers when a static sticker is received
     # Downloads and prints the sticker
 
@@ -113,6 +130,8 @@ async def receive_sticker(update, context, application):
 
     # === Print the Sticker === #
 
+    # TODO: get_file() can time out. Add an error message for the user to try again.
+    # Error: raise TimedOut from err
     if update.message.sticker is None:
         # Download photo
         sticker_file = await update.message.photo[-1].get_file()
@@ -129,7 +148,7 @@ async def receive_sticker(update, context, application):
     current_user.sticker_count += 1
 
     # Send confirmation
-    text = responses.GetConfirmMessage() + "\n\n" + current_user.get_limit_response()
+    text = responses.get_confirm_message() + "\n\n" + current_user.get_limit_response()
     await context.bot.send_message(chat_id=update.effective_chat.id, text=text,
                                    disable_web_page_preview=True,
                                    parse_mode="HTML")
