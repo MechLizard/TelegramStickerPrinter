@@ -82,7 +82,7 @@ async def receive_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # ==== Superuser commands ==== #
     if update.message.from_user.id in setup_cf['super_user_id']:
-        command = update.message.text.lower()
+        command = update.message.text
 
         if await TextCommands.super_user_command(update, context, command, users, printer,
                                                  printer_cf, users_cf, state_cf, config):
@@ -118,7 +118,7 @@ async def receive_sticker(update: Update, context: ContextTypes.DEFAULT_TYPE, ap
     # Don't accept stickers if it was before the printer started.
     # Messages that came in before have a datetime of shortly after the bot start time.
     # Wait 1 second before accepting commands.
-    if update.message.date.now() < bot_start_time + timedelta(0, 1):
+    if update.message.date.now() < bot_start_time + timedelta(0, 2):
         return
 
     # Find user in the users list if exists. Otherwise, create a new one.

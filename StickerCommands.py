@@ -1,16 +1,12 @@
 import io
-import os
 import random
 from typing import Dict, Union
 
 import zpl
 from zebra import Zebra
 from PIL import Image
-from pyrlottie import (LottieFile,
-                       convSingleLottieFrames)
 from telegram import (Update, File)
 from telegram.ext import (ContextTypes, Application)
-
 
 from user import User
 import responses
@@ -27,7 +23,6 @@ def get_user(update: Update, users: Dict[int, User], users_cf: Dict[str, Union[i
         :returns: A User object containing the user.
     """
 
-    # Find user in the users list
     current_user = users.get(update.message.from_user.id)
     if current_user is None:
         users[update.message.from_user.id] = User(update, users_cf)
@@ -66,26 +61,11 @@ async def convert_sticker(update: Update, sticker_file: File, printer_cf: Dict[s
         :returns: A PIL Image file containing the printable image.
         """
 
-    if update.message.sticker is not None and update.message.sticker.is_animated:
-        # Animated Sticker
-        # For pyrlottie to convert animated images, it must be saved to disk.
-        await sticker_file.download_to_drive(os.getcwd() + r"\animStickerBuff.tgs")
-        g_lottie_file = LottieFile(os.getcwd() + r"\animStickerBuff.tgs")
-
-        # Convert and extract frames
-        frame_skip = 5000
-        background_color = "FFFFFF"
-        g_lottie_frames = await convSingleLottieFrames(g_lottie_file, background_color, frame_skip, 1)
-
-        # Get the first item in the g_lottie_frames dict and get the first frame
-        incoming_sticker = g_lottie_frames[list(g_lottie_frames)[0]].frames[0]
-        incoming_sticker = incoming_sticker.convert("RGBA")
-    else:
-        # Static sticker or Image
-        sticker_buffer = io.BytesIO(b"")  # Create a memory buffer for the sticker to be downloaded to
-        await sticker_file.download_to_memory(sticker_buffer)  # Download sticker
-        incoming_sticker = Image.open(sticker_buffer).convert("RGBA")  # Create Image object
-        sticker_buffer.close()
+    # Static sticker or Image
+    sticker_buffer = io.BytesIO(b"")  # Create a memory buffer for the sticker to be downloaded to
+    await sticker_file.download_to_memory(sticker_buffer)  # Download sticker
+    incoming_sticker = Image.open(sticker_buffer).convert("RGBA")  # Create Image object
+    sticker_buffer.close()
 
     # Resize the media without changing aspect ratio so that it fills the media without stretching the image.
     ratio_x = printer_cf['media_size_x'] / incoming_sticker.size[0]
@@ -118,7 +98,7 @@ async def random_event(update: Update, context: ContextTypes.DEFAULT_TYPE, curre
         :param update: Update object containing the sent message.
         :param context: Object containing the bot interface for the current chat.
         :param current_user: A User object containing the user the operation is being performed on.
-        :param application: object containing the general bot interface.
+        :param application: Object containing the general bot interface.
         :param printer: The Zebra printer object.
         :param state_cf: Dict of configuration settings relating to the state of the script.
         :param users_cf: Dict of configuration settings relating to users.

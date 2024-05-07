@@ -20,6 +20,8 @@ BONUS_STICKER_MESSAGE = "Also, since you've been so nice I'm also printing this 
 # "I'm also printing this one for you to remember me!"
 # "I'm also printing this one just for you!
 
+ANIMATED_STICKER_ERROR = "This isn't harry potter, I can't print animated stickers."
+
 END_MESSAGE = r"""
 You are now out of stickers :(
 
@@ -136,11 +138,16 @@ def get_confirm_message():
         "That's a juicy sticker right there.",
         "Coming right up!",
         "This one will look great on your water bottle you bring to work.",
-        #"""...look, I don't judge. While I'm not in to that I understand that others are.
-        #
-#...Not that you're an \"other\" or anything like... look, just take your sticker.""",
         "That sticker is only 18% cringe!",
         "Thank you for signing up for the furry surveillance program. We are now watching.",
+        """͘            🤠
+　    🖼🖼🖼
+   🖼 　 🖼　  🖼
+ 👇  🖼🖼 👇
+     　  🖼　 🖼
+   　   🖼　   🖼
+　      👢      👢
+Howdy! I'm the art sheriff and I say that's a good sticker.""",
     ]
 
     return responses[random.randint(0, len(responses)) - 1] + " Sending to the printer!"

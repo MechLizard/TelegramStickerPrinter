@@ -29,6 +29,14 @@ async def super_user_command(update: Update, context: ContextTypes.DEFAULT_TYPE,
 
         :returns: A bool indicating whether the message matches a command.
         """
+
+    # First check set_queue, since it is case-sensitive
+    # Sets the print queue to your specification
+    if await set_queue(update, context, command, printer, printer_cf):
+        return True
+
+    command = command.lower()
+
     # ==== Reply Commands ==== #
     if update.message.reply_to_message is not None:
         reply_message = update.message.reply_to_message
@@ -100,10 +108,6 @@ async def super_user_command(update: Update, context: ContextTypes.DEFAULT_TYPE,
 
     # Lists the print queues on the device
     if await list_queues(update, context, command, printer):
-        return True
-
-    # Sets the print queue to your specification
-    if await set_queue(update, context, command, printer, printer_cf):
         return True
 
     # Enables/disables the random event
@@ -555,11 +559,13 @@ async def set_queue(update: Update, context: ContextTypes.DEFAULT_TYPE, command:
         :returns: A bool indicating whether the message triggers this function.
         """
 
-    if not command.startswith(SET_QUEUE):
+    if not command.lower().startswith(SET_QUEUE):
         return False
 
+    # If the space is in the correct position and the name of the printer is longer than 1 character
     if command[len(SET_QUEUE)] == " " and len(command[len(SET_QUEUE) + 1:]) > 1:
-        if command[len(SET_QUEUE) + 1:] in (queue.lower() for queue in printer.getqueues()):
+        # If the given printer queue name is in the list of the computer's queues
+        if command[len(SET_QUEUE) + 1:] in printer.getqueues():
             printer_cf['printer_queue'] = command[len(SET_QUEUE) + 1:]
             text = responses.SET_QUEUE_SUCCESS
         else:
