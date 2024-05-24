@@ -4,7 +4,6 @@ import logging
 from datetime import (datetime, timedelta)
 from typing import Dict
 
-import telegram.error
 from zebra import Zebra
 from telegram import Update
 from telegram.ext import (ContextTypes, ApplicationBuilder, Application)
@@ -110,7 +109,7 @@ async def receive_sticker(update: Update, context: ContextTypes.DEFAULT_TYPE, ap
 
         :param update: Update object containing the sent message.
         :param context: Object containing the bot interface for the current chat.
-        :param application: object containing the general bot interface
+        :param application: Object containing the general bot interface
     """
     # Triggers when a static sticker is received
     # Downloads and prints the sticker
@@ -134,24 +133,8 @@ async def receive_sticker(update: Update, context: ContextTypes.DEFAULT_TYPE, ap
         return
 
     # === Print the Sticker === #
-
-    # TODO: get_file() can time out. Add an error message for the user to try again.
-    # Error: raise TimedOut from err
-    # TODO: Move this section to its own function
-    try:
-        if update.message.sticker is None:
-            # Download photo
-            sticker_file = await update.message.photo[-1].get_file(read_timeout=4.0,
-                                                                   connect_timeout=4.0,
-                                                                   pool_timeout=4.0)
-        else:
-            # Download sticker
-            sticker_file = await update.message.sticker.get_file(read_timeout=4.0,
-                                                                 connect_timeout=4.0,
-                                                                 pool_timeout=4.0)
-    except telegram.error.TimedOut:
-        text = responses.MESSAGE_TIMED_OUT + " " + current_user.get_limit_response()
-        await context.bot.send_message(chat_id=update.effective_chat.id, text=text)
+    # Get the file
+    if (sticker_file := await StickerCommands.download_image(update, context, current_user)) is None:
         return
 
     # Convert sticker to printable format

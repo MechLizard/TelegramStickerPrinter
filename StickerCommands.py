@@ -5,6 +5,7 @@ from typing import Dict, Union
 import zpl
 from zebra import Zebra
 from PIL import Image
+import telegram.error
 from telegram import (Update, File)
 from telegram.ext import (ContextTypes, Application)
 
@@ -49,6 +50,34 @@ async def limit_exceeded(update: Update, context: ContextTypes.DEFAULT_TYPE, cur
         return True
 
     return False
+
+
+async def download_image(update: Update, context: ContextTypes.DEFAULT_TYPE, current_user: User) -> Union[File, None]:
+    """ Downloads the sent image.
+        Replies with a timeout message if it fails.
+
+        :param update: Update object containing the sent message.
+        :param context: Object containing the bot interface for the current chat.
+        :param current_user: A User object containing the user the operation is being performed on.
+        :returns: The downloaded file, or None if it fails.
+    """
+    # TODO: Download the first appropriately sized photo, not just the largest. Save data.
+    try:
+        if update.message.sticker is None:
+            # Download photo
+            sticker_file = await update.message.photo[-1].get_file(read_timeout=4.0,
+                                                                   connect_timeout=4.0,
+                                                                   pool_timeout=4.0)
+        else:
+            # Download sticker
+            sticker_file = await update.message.sticker.get_file(read_timeout=4.0,
+                                                                 connect_timeout=4.0,
+                                                                 pool_timeout=4.0)
+        return sticker_file
+    except telegram.error.TimedOut:
+        text = responses.MESSAGE_TIMED_OUT + " " + current_user.get_limit_response()
+        await context.bot.send_message(chat_id=update.effective_chat.id, text=text)
+        return
 
 
 async def convert_sticker(update: Update, sticker_file: File, printer_cf: Dict[str, Union[str, int]]) -> Image:
