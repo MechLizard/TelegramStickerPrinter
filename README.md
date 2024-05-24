@@ -36,8 +36,12 @@ Windows:
 
 Raspberry Pi OS/Linux:
 
-Note: Raspberry Pi OS is a stripped-down Debian fork. On other forms of Linux, some features may already be installed or different package managers may need to be invoked.
-Setting up the Raspberry Pi. I used the Raspberry Pi Zero 2 W for wifi connectivity and the ability to run a Linux OS. The only extras needed are a microSD card, a way for your computer to write to the microSD card, and USB adaptors to connect the Raspberry Pi to the printer.
+Note: These are the instructions for the Raspberry Pi OS, which is a stripped-down Debian fork. 
+Other versions of linux will be similar, 
+but some features may already be installed or different package managers may need to be invoked.
+I used the Raspberry Pi Zero 2 W for wifi connectivity and the ability to run a Linux OS. 
+The only extras needed are a microSD card, a way for your computer to write to the microSD card, 
+and USB adaptors to connect the Raspberry Pi to the printer.
 1. Download the Raspberry Pi imager and run it.
 2. Connect your microSD card to your computer.
 3. Using the Raspberry Pi imager, install the version that works best for you (I chose the Raspberry Pi OS Lite (64-bit)). Include your WiFi login, enable SSL login (this can be disabled later), and give it a hostname.
