@@ -4,6 +4,7 @@ import logging
 from datetime import (datetime, timedelta)
 from typing import Dict
 
+import telegram.error
 from zebra import Zebra
 from telegram import Update
 from telegram.ext import (ContextTypes, ApplicationBuilder, Application)
@@ -17,7 +18,11 @@ import StickerCommands
 # Enable logging
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    level=logging.INFO
+    level=logging.INFO,
+    handlers=[
+        logging.FileHandler("debug.log"),
+        logging.StreamHandler()
+    ]
 )
 
 # ================================= #
@@ -132,12 +137,22 @@ async def receive_sticker(update: Update, context: ContextTypes.DEFAULT_TYPE, ap
 
     # TODO: get_file() can time out. Add an error message for the user to try again.
     # Error: raise TimedOut from err
-    if update.message.sticker is None:
-        # Download photo
-        sticker_file = await update.message.photo[-1].get_file()
-    else:
-        # Download sticker
-        sticker_file = await update.message.sticker.get_file()
+    # TODO: Move this section to its own function
+    try:
+        if update.message.sticker is None:
+            # Download photo
+            sticker_file = await update.message.photo[-1].get_file(read_timeout=4.0,
+                                                                   connect_timeout=4.0,
+                                                                   pool_timeout=4.0)
+        else:
+            # Download sticker
+            sticker_file = await update.message.sticker.get_file(read_timeout=4.0,
+                                                                 connect_timeout=4.0,
+                                                                 pool_timeout=4.0)
+    except telegram.error.TimedOut:
+        text = responses.MESSAGE_TIMED_OUT + " " + current_user.get_limit_response()
+        await context.bot.send_message(chat_id=update.effective_chat.id, text=text)
+        return
 
     # Convert sticker to printable format
     print_image = await StickerCommands.convert_sticker(update, sticker_file, printer_cf)
