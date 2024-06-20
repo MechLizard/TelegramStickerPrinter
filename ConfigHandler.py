@@ -22,7 +22,8 @@ def get_default_config():
 
     state = {'bot_enabled': True,
              'sticker_monitoring': True,
-             'event': True}
+             'event': False,
+             'slap_detection': False}
 
     default_config = {'SETUP': setup,
                       'PRINTER': printer,
@@ -95,11 +96,14 @@ def save_config(config_info):
     config.set('STATE', '# Whether the bot is enabled at the start', None)
     config.set('STATE', 'BOT_ENABLED', save_conf['STATE']['bot_enabled'])
 
-    config.set('STATE', '# Whether sticker monitoring is enabled at the start', None)
+    config.set('STATE', '# Whether sticker monitoring is enabled by default', None)
     config.set('STATE', 'STICKER_MONITORING', save_conf['STATE']['sticker_monitoring'])
 
-    config.set('STATE', '# Whether the random event is enabled at the start', None)
+    config.set('STATE', '# Whether the random event is enabled by default', None)
     config.set('STATE', 'EVENT', save_conf['STATE']['event'])
+
+    config.set('STATE', '# Whether slap detection is enabled by default', None)
+    config.set('STATE', 'SLAP_DETECTION', save_conf['STATE']['slap_detection'])
 
     with open('BotConfig.ini', 'w') as configfile:
         config.write(configfile)

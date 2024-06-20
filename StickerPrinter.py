@@ -13,6 +13,7 @@ from user import User
 import ConfigHandler
 import TextCommands
 import StickerCommands
+from threading import Thread
 
 # Enable logging
 logging.basicConfig(
@@ -33,8 +34,7 @@ printer_cf = config['PRINTER']
 users_cf = config['USERS']
 state_cf = config['STATE']
 
-# TODO: Properly comment the function of the functions and give type hints
-
+# Initialize printer
 printer = Zebra(printer_cf['printer_queue'])  # z = Zebra( [queue] )
 try:
     printer.setup(direct_thermal=True,
@@ -47,9 +47,31 @@ except:
     print(printer.getqueues())
     state_cf['bot_enabled'] = False
 
+# Slap detection
+# Try to import accelerometer module. If failed, disable slap detection.
+try:
+    import SlapDetection
+    state_cf['slap_hardware'] = True
+    slap_detector = SlapDetection.SlapDetection(state_cf['slap_detection'], printer, printer_cf)
+    thread = Thread(target=slap_detector.slap_detection, args=(printer,))
+    thread.start()
+    logging.info("Accelerometer detected. Slap detection can be enabled.")
+except ModuleNotFoundError:
+    state_cf['slap_detection'] = state_cf['slap_hardware'] = False
+    slap_detector = None
+    logging.info("Slap detection disabled. smbus or mpu6050-raspberrypi module not installed")
+except FileNotFoundError:
+    state_cf['slap_detection'] = state_cf['slap_hardware'] = False
+    slap_detector = None
+    logging.error("No .jpg or .png images in slap_images folder. Slap detection disabled.")
+except OSError:
+    state_cf['slap_detection'] = state_cf['slap_hardware'] = False
+    slap_detector = None
+    logging.error("Accelerometer not detected. Slap detection disabled.")
+
 bot_start_time = datetime.now()
 
-
+# Initialize User list
 users: Dict[int, User] = {}
 # Check if there is a previously saved user list
 try:
@@ -89,7 +111,7 @@ async def receive_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
         command = update.message.text
 
         if await TextCommands.super_user_command(update, context, command, users, printer,
-                                                 printer_cf, users_cf, state_cf, config):
+                                                 slap_detector, printer_cf, users_cf, state_cf, config):
             return
         else:
             await TextCommands.command_not_recognized(update, context)
@@ -138,7 +160,7 @@ async def receive_sticker(update: Update, context: ContextTypes.DEFAULT_TYPE, ap
         return
 
     # Convert sticker to printable format
-    print_image = await StickerCommands.convert_sticker(update, sticker_file, printer_cf)
+    print_image = await StickerCommands.convert_sticker(sticker_file, printer_cf)
 
     StickerCommands.print_sticker(print_image, printer, printer_cf)
 
@@ -152,11 +174,11 @@ async def receive_sticker(update: Update, context: ContextTypes.DEFAULT_TYPE, ap
                                    parse_mode="HTML")
 
     # Random event if enabled
-    await StickerCommands.random_event(update, context, current_user, application, printer, state_cf, users_cf, printer_cf)
+    await StickerCommands.random_event(update, context, current_user, application, printer, state_cf,
+                                       users_cf, printer_cf)
 
     # Send Sticker to superuser if enabled
     await StickerCommands.forward_to_superuser(update, current_user, setup_cf, state_cf)
 
     # Save data
     pickle.dump(users, open("limit_tracker.p", "wb"))
-

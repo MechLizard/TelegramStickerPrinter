@@ -29,6 +29,10 @@ STICKER_MONITORING_OFF = "monitor off"
 EVENT_ON = "event on"
 EVENT_OFF = "event off"
 
+# Turn slap detection on or off
+SLAP_ON = "slap on"
+SLAP_OFF = "slap off"
+
 # == Reply-to commands == #
 # = Reply to a forwarded sticker with these commands = #
 

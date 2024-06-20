@@ -13,7 +13,8 @@ from user import User
 
 
 async def super_user_command(update: Update, context: ContextTypes.DEFAULT_TYPE, command: str, users: Dict[int, User],
-                             printer: Zebra, printer_cf, users_cf, state_cf, config: Dict) -> bool:
+                             printer: Zebra, slap_detector, printer_cf, users_cf, state_cf,
+                             config: Dict) -> bool:
     """ Takes a command sent by a user, determines if it's a superuser.
         If it is a superuser, check whether the messages match a command. If so, run that command.
 
@@ -22,6 +23,7 @@ async def super_user_command(update: Update, context: ContextTypes.DEFAULT_TYPE,
         :param command: The text command sent by the user
         :param users: A dict containing the users, found by user ID.
         :param printer: The Zebra printer object.
+        :param slap_detector: SlapDetection class object or None whether the hardware is available.
         :param printer_cf: Dict of configuration settings relating to the printer.
         :param users_cf: Dict of configuration settings relating to users.
         :param state_cf: Dict of configuration settings relating to the state of the script.
@@ -112,6 +114,10 @@ async def super_user_command(update: Update, context: ContextTypes.DEFAULT_TYPE,
 
     # Enables/disables the random event
     if await toggle_random_event(update, context, command, state_cf):
+        return True
+
+    # Enables/disables slap detection
+    if await toggle_slap_detection(update, context, command, slap_detector, state_cf):
         return True
 
     # Saves config
@@ -606,6 +612,48 @@ async def toggle_random_event(update: Update, context: ContextTypes.DEFAULT_TYPE
             state_cf['event'] = False
         else:
             text = responses.EVENT_ALREADY_DISABLED
+        await context.bot.send_message(chat_id=update.effective_chat.id, text=text)
+        return True
+
+    return False
+
+
+async def toggle_slap_detection(update: Update, context: ContextTypes.DEFAULT_TYPE, command: str,
+                                slap_detector, state_cf: Dict[str, bool]) -> bool:
+    """ Enables/disables slap detection
+
+        :param update: Update object containing the sent message.
+        :param context: Object containing the bot interface for the current chat.
+        :param command: The text command sent by the user.
+        :param slap_detector: A SlapDetection object.
+        :param state_cf: Dict of configuration settings relating to the state of the script.
+
+        :return: A bool indicating whether the message triggers this function.
+        """
+
+    # Turn on slap detection
+    if command == SLAP_ON:
+        if not state_cf['slap_hardware']:
+            text = responses.SLAP_HARDWARE_MISSING
+        elif state_cf['slap_detection']:
+            text = responses.SLAP_ALREADY_ENABLED
+        else:
+            text = responses.SLAP_ENABLED
+            slap_detector.change_state(True)
+            state_cf['slap_detection'] = True
+        await context.bot.send_message(chat_id=update.effective_chat.id, text=text)
+        return True
+
+    # Turn off slap detection
+    if command == SLAP_OFF:
+        if not state_cf['slap_hardware']:
+            text = responses.SLAP_HARDWARE_MISSING
+        elif state_cf['slap_detection']:
+            text = responses.SLAP_DISABLED
+            slap_detector.change_state(False)
+            state_cf['slap_detection'] = False
+        else:
+            text = responses.SLAP_ALREADY_DISABLED
         await context.bot.send_message(chat_id=update.effective_chat.id, text=text)
         return True
 

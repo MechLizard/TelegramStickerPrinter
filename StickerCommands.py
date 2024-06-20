@@ -80,10 +80,9 @@ async def download_image(update: Update, context: ContextTypes.DEFAULT_TYPE, cur
         return
 
 
-async def convert_sticker(update: Update, sticker_file: File, printer_cf: Dict[str, Union[str, int]]) -> Image:
+async def convert_sticker(sticker_file: File, printer_cf: Dict[str, Union[str, int]]) -> Image:
     """ Converts the downloaded sticker or picture to a format the printer can accept
 
-        :param update: Update object containing the sent message.
         :param sticker_file: The unprocessed downloaded image sent to the bot.
         :param printer_cf: Dict of configuration settings relating to the printer.
 
@@ -112,6 +111,31 @@ async def convert_sticker(update: Update, sticker_file: File, printer_cf: Dict[s
     print_image = Image.new("RGBA",
                             (printer_cf['media_size_x'],
                              printer_cf['media_size_y']),
+                            color="white")  # Uses white background so that transparent pixels don't show up as black.
+    print_image.paste(incoming_sticker, (print_offset_x, print_offset_y), mask=incoming_sticker)
+    print_image = print_image.convert("1")  # Convert image to 1-byte B&W image
+
+    return print_image
+
+
+def convert_sticker_local(image: Image):
+    image = image.convert("RGBA")
+    # Resize the media without changing aspect ratio so that it fills the media without stretching the image.
+    ratio_x = 400 / image.size[0]
+    ratio_y = 400 / image.size[1]
+    scale_factor = min(ratio_x, ratio_y)
+    new_img_x = int(image.size[0] * scale_factor)
+    new_img_y = int(image.size[1] * scale_factor)
+    incoming_sticker = image.resize((new_img_x, new_img_y))
+
+    # Create a centered offset to paste the image on to a canvas matching the print media.
+    print_offset_x = (400 - new_img_x) // 2
+    print_offset_y = (400 - new_img_y) // 2
+
+    # Create a canvas the size of the print media and paste the sticker on it.
+    print_image = Image.new("RGBA",
+                            (400,
+                             400),
                             color="white")  # Uses white background so that transparent pixels don't show up as black.
     print_image.paste(incoming_sticker, (print_offset_x, print_offset_y), mask=incoming_sticker)
     print_image = print_image.convert("1")  # Convert image to 1-byte B&W image
@@ -192,8 +216,28 @@ def print_sticker(print_image: Image, printer: Zebra, printer_cf: Dict[str, Unio
     print_command_gen.write_graphic(print_image, printer_cf['media_mm_x'])
     print_command_gen.endorigin()
 
-    # print(print_command_gen.dumpZPL())  # Can be used to display the print commands
     printer.output(print_command_gen.dumpZPL())
 
     del print_command_gen
     del print_image
+
+
+def get_print_command(print_image: Image, printer: Zebra, printer_cf: Dict[str, Union[str, int]]) -> str:
+    """ Takes an image and returns a command that can be sent to the printer.
+
+        :param print_image: The PIL Image object that is already converted to printable format via convert_sticker
+        :param printer: The Zebra printer object
+        :param printer_cf: Dict of configuration settings relating to the printer.
+
+        :returns: A ZPL string that can be sent to a zebra printer.
+        """
+
+    print_command_gen = zpl.Label(printer_cf['media_mm_x'], printer_cf['media_mm_y'], printer_cf['dpmm'])
+    # sticker_img.show()  # Can be used to display the sticker on the host
+
+    print_command_gen.origin(printer_cf['image_offset_x'],
+                             printer_cf['image_offset_y'])
+    print_command_gen.write_graphic(print_image, printer_cf['media_mm_x'])
+    print_command_gen.endorigin()
+
+    return print_command_gen.dumpZPL()

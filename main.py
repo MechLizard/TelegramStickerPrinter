@@ -17,9 +17,7 @@ setup_cf = config['SETUP']
 application = ApplicationBuilder().token(setup_cf['telegram_api_token']).build()
 
 
-# =============================== #
-# ======= Async Functions ======= #
-# =============================== #
+# == Async Functions == #
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await StickerPrinter.start(update, context)
 
@@ -36,9 +34,7 @@ async def animated_sticker_error(update: Update, context: ContextTypes.DEFAULT_T
     await context.bot.send_message(chat_id=update.effective_chat.id, text=responses.ANIMATED_STICKER_ERROR)
 
 
-# ==================== #
-# ======= Main ======= #
-# ==================== #
+# == Main == #
 if __name__ == '__main__':
 
     # ==== Function Declarations ====#

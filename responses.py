@@ -61,6 +61,11 @@ EVENT_ENABLED = "Random event enabled"
 EVENT_DISABLED = "Random event disabled"
 EVENT_ALREADY_ENABLED = "Random event is already enabled"
 EVENT_ALREADY_DISABLED = "Random event is already disabled"
+SLAP_ENABLED = "Slap detection enabled"
+SLAP_DISABLED = "Slap detection disabled"
+SLAP_ALREADY_ENABLED = "Slap detection is already enabled"
+SLAP_ALREADY_DISABLED = "Slap detection is already disabled"
+SLAP_HARDWARE_MISSING = "There is no accelerometer. Slap detection is disabled."
 CANT_FIND_USER_ERROR = "Can't find the user for that sticker"
 USER_BANNED = "That user has been banned. They have 0 sticker limit"
 USER_LIMIT_RESET = "That user has had their stickers reset. They now have {amount} stickers."
@@ -107,11 +112,11 @@ General commands:
 \"{constants.GET_LIMIT}\" - Shows the current sticker limit
 \"{constants.BOT_ENABLE}\" - Enables the bot
 \"{constants.BOT_DISABLE}\" - Disables the bot
-\"{constants.STICKER_MONITORING_ON}\" - Turn on monitoring (sends superusers all printed stickers)
-\"{constants.STICKER_MONITORING_OFF}\" - Turn off monitoring
-\"{constants.EVENT_ON}\" - Turn on random events
-\"{constants.EVENT_OFF}\" - Turn off random events
-\"{constants.COMMANDS}\" - Displays this help message
+\"{constants.STICKER_MONITORING_ON}\"/\"{constants.STICKER_MONITORING_OFF}\" \
+- Turn on/off monitoring (sends superusers all printed stickers)
+\"{constants.EVENT_ON}\"/\"{constants.EVENT_OFF}\" \
+- Turn on/off random events
+\"{constants.SLAP_ON}\"/\"{constants.SLAP_OFF}\" - Turn slap detection on/off
 \"{constants.SAVE}\" - Save current settings to config file
 
 Printer commands:
@@ -144,12 +149,12 @@ def get_confirm_message():
         "That sticker is only 18% cringe!",
         "Thank you for signing up for the furry surveillance program. We are now watching.",
         """͘            🤠
-　    🖼🖼🖼
-   🖼 　 🖼　  🖼
- 👇  🖼🖼 👇
-     　  🖼　 🖼
-   　   🖼　   🖼
-　      👢      👢
+　   🖼🖼🖼
+   🖼    🖼   🖼
+  👇   🖼🖼  👇
+       🖼　 🖼
+     🖼　    🖼
+　  👢        👢
 Howdy! I'm the art sheriff and I say that's a good sticker.""",
     ]
 
