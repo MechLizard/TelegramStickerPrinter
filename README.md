@@ -30,6 +30,7 @@ so that you can slap the printer to make it print out a random image.
 
 The printer can now feel pleasure.
 
+https://github.com/MechLizard/TelegramStickerPrinter/assets/12668405/a11483d8-97df-42aa-9748-943663f40057
 
 
 # Instructions
