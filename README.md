@@ -22,6 +22,16 @@ When the script is run for the first time, it creates a default configuration. T
 # Example
 ![img_2.png](readme_images/chat_img.png) ![img_3.png](readme_images/printer_img.png)
 
+# Slap printing
+If an MPU6050, MPU6500, or MPU9250 accelerometer is connected to a Raspberry Pi running this code,
+it will print a random .jpg or .png image from the slap_images folder when the module is jostled hard enough. 
+The idea is that a raspberry pi case with the accelerometer inside it can be connected to the printer with velcro,
+so that you can slap the printer to make it print out a random image. 
+
+The printer can now feel pleasure.
+
+
+
 # Instructions
 Windows:
 1. Create a Telegram bot account using the BotFather. There are many tutorials for this. Get an API key from it.
