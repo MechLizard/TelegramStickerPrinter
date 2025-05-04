@@ -3,7 +3,7 @@
 from __future__ import annotations
 from telegram import Update
 from telegram.ext import (
-    filters, MessageHandler, ApplicationBuilder, ContextTypes, CommandHandler
+    filters, MessageHandler, ApplicationBuilder, ContextTypes, CommandHandler, CallbackQueryHandler
 )
 
 import ConfigHandler
@@ -20,6 +20,22 @@ application = ApplicationBuilder().token(setup_cf['telegram_api_token']).build()
 # == Async Functions == #
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await StickerPrinter.start(update, context)
+
+
+async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await StickerPrinter.help_command(update, context)
+
+
+async def random_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await StickerPrinter.random_sticker_start(update, context, application)
+
+async def opt_out_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await StickerPrinter.opt_out(update, context)
+
+#TODO: Add an opt-in command
+
+async def receive_button_press(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await StickerPrinter.button_press_press(update, context, application)
 
 
 async def receive_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -50,5 +66,9 @@ if __name__ == '__main__':
     application.add_handler(sticker_handler)
     application.add_handler(photo_handler)
     application.add_handler(animated_sticker_handler)
+    application.add_handler(CommandHandler("help", help_command))
+    application.add_handler(CommandHandler("random", random_command))
+    application.add_handler(CommandHandler("optout", opt_out_command))
+    application.add_handler(CallbackQueryHandler(receive_button_press))
 
     application.run_polling()

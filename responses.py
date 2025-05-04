@@ -1,9 +1,26 @@
 import random
 import constants
 
+GITHUB_LINK = "https://github.com/MechLizard/TelegramStickerPrinter"
+OWNER_TELEGRAM = "@MechLizard"
+
 # First message when starting the bot
-GREETING = "Hi! Send me any sticker or picture and I'll print it!\n\n" \
-    "You have {amount} stickers left."
+GREETING = ("Hi! Send me any sticker or picture and I'll print it!\n\n"
+            "/random prints a random sticker previously sent to the printer by anyone.\n"
+            "/optout to opt out of having your stickers saved for the /random feature.\n\n"
+            "You have {amount} stickers left.")
+
+# Response for /help user command
+HELP = ("I can print any (non-animated) sticker or picture. You can forward images or stickers from other users to me, too.\n\n"
+        "/random to print a random sticker sent by anyone previously (If feature is enabled).\n"
+        "/optout to opt out of having your stickers saved for the /random feature. "
+        "This also deletes any previous stickers you've previously sent from the list."
+        "However your stickers may still be monitored for moderation purposes.\n\n"
+        "Note: What you send is monitored. What you send may be saved to be printed again via the \\random command\n\n"
+        "<a href=\"" + GITHUB_LINK + "\">Github of this code</a>\n\n"
+        "Owner: " + OWNER_TELEGRAM + "\n\n"
+        "You have {amount} stickers left.")
+
 
 OUT_OF_STICKERS = "You are now out of stickers :("
 STICKER_COUNT = "You still have {count} stickers left."
@@ -23,7 +40,23 @@ BONUS_STICKER_MESSAGE = "Also, since you've been so nice I'm also printing this 
 # "I'm also printing this one for you to remember me!"
 # "I'm also printing this one just for you!
 
+RANDOM_WARNING = ("This will print a random sticker sent by anyone previously. "
+                  "This may include explicit or surprising images. Continue?")
+RANDOM_WARNING_CANCEL = "Okay! Canceled."
+
 ANIMATED_STICKER_ERROR = "This isn't harry potter, I can't print animated stickers."
+STICKER_HISTORY_OPT_OUT = ("You've opted out of having your stickers recorded for use in the random print feature. "
+                           "Any stickers you sent previously will also be removed from the list. "
+                           "Your stickers may still be monitored by an admin for moderation purposes.")
+STICKER_HISTORY_ALREADY_OPTED_OUT = ("You've already opted out of having your stickers recorded for use in the random print feature. "
+                           "Any stickers you sent previously were also removed from the list. "
+                           "Your stickers may still be monitored by an admin for moderation purposes.")
+RANDOM_DISABLED_ERROR = "Sorry, random sticker printing is currently disabled :("
+RANDOM_QUEUE_EMPTY_ERROR = "Sorry, can't print a random sticker because there are no stickers in the history D:"
+RANDOM_CHOSEN_STICKER = "Your random sticker:"
+RANDOM_NO_SENDABLE_STICKERS = "Looks like there is no existing saved stickers. Try sending a few first."
+
+
 
 END_MESSAGE = r"""
 You are now out of stickers :(
@@ -36,8 +69,8 @@ Too much heat will turn these black. Will start fading in a few years and will f
 
 Have a good con!
 
-<a href="https://github.com/MechLizard/TelegramStickerPrinter">Github of this code</a> and <a href="https://about.me/IzzyJones">check me out</a> if you're hiring.
-"""
+
+""" + "<a href=\"" + GITHUB_LINK + "\">Github of this code</a>."
 
 # ==== Super user responses ==== #
 LOGS_CLEARED = "User limits have been reset"
@@ -64,10 +97,16 @@ EVENT_ALREADY_DISABLED = "Random event is already disabled"
 SLAP_ENABLED = "Slap detection enabled"
 SLAP_DISABLED = "Slap detection disabled"
 SLAP_ALREADY_ENABLED = "Slap detection is already enabled"
+RANDOM_ENABLED = "Random sticker printing enabled"
+RANDOM_DISABLED = "Random sticker printing disabled"
+RANDOM_ALREADY_ENABLED = "Random sticker printing is already enabled"
+RANDOM_ALREADY_DISABLED = "Random sticker printing is already disabled"
 SLAP_ALREADY_DISABLED = "Slap detection is already disabled"
 SLAP_HARDWARE_MISSING = "There is no accelerometer. Slap detection is disabled."
 CANT_FIND_USER_ERROR = "Can't find the user for that sticker"
 USER_BANNED = "That user has been banned. They have 0 sticker limit"
+STICKER_REMOVED_FROM_HISTORY = "Sticker removed from history"
+CANT_REMOVE = "That isn't something I can remove from the sticker history"
 USER_LIMIT_RESET = "That user has had their stickers reset. They now have {amount} stickers."
 PRINT_OFFSET = """
 The current print offset in pixels:
@@ -97,6 +136,8 @@ BOT_ENABLE_ERROR_NO_QUEUE = "Bot enable failed. The print queue is not available
 NO_FILE = "The user file is not found or no users have been recorded yet. Either way, it's a clean slate."
 CANT_DELETE_FILE = "Unable to delete the user file."
 CONFIG_SAVED = "Configuration has been saved."
+#RANDOM_PRINTED_FOR = "Random printed for @{user_at}"
+RANDOM_PRINTED_FOR = "Random printed for <a href=\"tg://user?id={user_id}\">{user_at}</a>"
 SUPERUSER_NOT_SET = r"""
 There is no superuser set.
 Enter your Telegram user ID in the "super_user_id" field in BotConfig.ini
@@ -117,6 +158,7 @@ General commands:
 \"{constants.EVENT_ON}\"/\"{constants.EVENT_OFF}\" \
 - Turn on/off random events
 \"{constants.SLAP_ON}\"/\"{constants.SLAP_OFF}\" - Turn slap detection on/off
+\"{constants.RANDOM_ON}\"/\"{constants.RANDOM_OFF}\" - Turn random sticker printing on/off
 \"{constants.SAVE}\" - Save current settings to config file
 
 Printer commands:
@@ -128,7 +170,8 @@ Printer commands:
 "Reply commands (Reply to a monitored sticker):
 [+ or - or =][number] - Add, subtract, or set sticker limit (Ex: +5, -1, or =999)
 \"{constants.BAN}\" - Bans the user. Sets their limit to 0
-\"{constants.RESET}\" - Resets the user's used stickers to 0. Lets them print more"""
+\"{constants.RESET}\" - Resets the user's used stickers to 0. Lets them print more
+\"{constants.REMOVE}\" - Remove the sticker from /random feature"""
 
 
 def get_confirm_message():

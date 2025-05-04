@@ -6,7 +6,7 @@ import zpl
 from zebra import Zebra
 from PIL import Image
 import telegram.error
-from telegram import (Update, File)
+from telegram import (Update, File, PhotoSize, Sticker)
 from telegram.ext import (ContextTypes, Application)
 
 from user import User
@@ -24,7 +24,7 @@ def get_user(update: Update, users: Dict[int, User], users_cf: Dict[str, Union[i
         :returns: A User object containing the user.
     """
 
-    current_user = users.get(update.message.from_user.id)
+    current_user = users.get(update.effective_sender.id)
     if current_user is None:
         users[update.message.from_user.id] = User(update, users_cf)
         current_user = users[update.message.from_user.id]
@@ -52,32 +52,44 @@ async def limit_exceeded(update: Update, context: ContextTypes.DEFAULT_TYPE, cur
     return False
 
 
-async def download_image(update: Update, context: ContextTypes.DEFAULT_TYPE, current_user: User) -> Union[File, None]:
+async def download_image(update: Update, context: ContextTypes.DEFAULT_TYPE, current_user: User,
+                         object_to_print: Union[Sticker, PhotoSize] = None) -> Union[tuple[File, PhotoSize | Sticker], None]:
     """ Downloads the sent image.
         Replies with a timeout message if it fails.
 
         :param update: Update object containing the sent message.
         :param context: Object containing the bot interface for the current chat.
         :param current_user: A User object containing the user the operation is being performed on.
+        :param object_to_print: A sticker or PhotoSize object to override current message.
         :returns: The downloaded file, or None if it fails.
     """
     # TODO: Download the first appropriately sized photo, not just the largest. Save data.
     try:
-        if update.message.sticker is None:
+        if object_to_print is not None:
+            # Download the specific requested file
+            sticker_file = await context.bot.get_file(object_to_print.file_id,
+                                 read_timeout=4.0,
+                                 connect_timeout=4.0,
+                                 pool_timeout=4.0)
+            image_object = object_to_print
+        elif update.message.sticker is None:
             # Download photo
             sticker_file = await update.message.photo[-1].get_file(read_timeout=4.0,
                                                                    connect_timeout=4.0,
                                                                    pool_timeout=4.0)
+            image_object = update.message.photo[-1]
         else:
             # Download sticker
             sticker_file = await update.message.sticker.get_file(read_timeout=4.0,
                                                                  connect_timeout=4.0,
                                                                  pool_timeout=4.0)
-        return sticker_file
+            image_object = update.message.sticker
+
+        return sticker_file, image_object
     except telegram.error.TimedOut:
         text = responses.MESSAGE_TIMED_OUT + " " + current_user.get_limit_response()
         await context.bot.send_message(chat_id=update.effective_chat.id, text=text)
-        return
+        return None
 
 
 async def convert_sticker(sticker_file: File, printer_cf: Dict[str, Union[str, int]]) -> Image:
@@ -184,20 +196,30 @@ async def random_event(update: Update, context: ContextTypes.DEFAULT_TYPE, curre
             sticker_buffer.close()
 
 
-async def forward_to_superuser(update: Update, current_user: ContextTypes.DEFAULT_TYPE,
-                               setup_cf: Dict[str, Union[str, list, bool]], state_cf: Dict[str, bool]):
+async def forward_to_superuser(update: Update, context: ContextTypes.DEFAULT_TYPE, current_user: User,
+                               setup_cf: Dict[str, Union[str, list, bool]], state_cf: Dict[str, bool],
+                               object_to_print: Union[Sticker, PhotoSize] = None):
     """ If enabled, forwards the image to the superusers
 
         :param update: Update object containing the sent message.
+        :param context: Object containing the bot interface for the current chat.
         :param current_user: A User object containing the user the operation is being performed on.
         :param setup_cf: Dict of api token and superuser IDs.
         :param state_cf: Dict of configuration settings relating to the state of the script.
+        :param object_to_print: Optional object containing the image to be printed.
+            When included, sends the file directly to the superuser instead of forwarding.
         """
     # forward Sticker to superusers if its enabled
     if state_cf['sticker_monitoring']:
-        for i in setup_cf['super_user_id']:
-            forwarded_message = await update.message.forward(i)
-            current_user.log_message(forwarded_message.id)
+        for super_id in setup_cf['super_user_id']:
+            if object_to_print is not None:
+                text = responses.RANDOM_PRINTED_FOR.format(user_at=current_user.username, user_id=current_user.user_id)
+                await context.bot.send_message(chat_id=super_id, text=text, parse_mode='HTML')
+                await context.bot.send_sticker(super_id, object_to_print)
+
+            else:
+                forwarded_message = await update.message.forward(super_id)
+                current_user.log_message(forwarded_message.id)
 
 
 def print_sticker(print_image: Image, printer: Zebra, printer_cf: Dict[str, Union[str, int]]):

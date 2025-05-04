@@ -33,6 +33,10 @@ EVENT_OFF = "event off"
 SLAP_ON = "slap on"
 SLAP_OFF = "slap off"
 
+# Turn random sticker printing on or off
+RANDOM_ON = "random on"
+RANDOM_OFF = "random off"
+
 # == Reply-to commands == #
 # = Reply to a forwarded sticker with these commands = #
 
@@ -44,6 +48,9 @@ BAN = "ban"
 
 # Sets user's stickers printed to 0
 RESET = "reset"
+
+# Removes the sticker from the pool of stickers the /random feature chooses from
+REMOVE = "remove"
 
 # Displays current offset and explains how to use the offset commands
 PRINT_OFFSET = "print offset"

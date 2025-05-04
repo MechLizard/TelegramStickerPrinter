@@ -22,6 +22,7 @@ def get_default_config():
 
     state = {'bot_enabled': True,
              'sticker_monitoring': True,
+             'random_sticker_printing': True,
              'event': False,
              'slap_detection': False}
 
@@ -98,6 +99,9 @@ def save_config(config_info):
 
     config.set('STATE', '# Whether sticker monitoring is enabled by default', None)
     config.set('STATE', 'STICKER_MONITORING', save_conf['STATE']['sticker_monitoring'])
+
+    config.set('STATE', '# Whether the random sticker printing user feature is enabled by default', None)
+    config.set('STATE', 'RANDOM_STICKER_PRINTING', save_conf['STATE']['random_sticker_printing'])
 
     config.set('STATE', '# Whether the random event is enabled by default', None)
     config.set('STATE', 'EVENT', save_conf['STATE']['event'])

@@ -1,8 +1,10 @@
 import os
+import pickle
+import re
 from typing import Dict, Union
 
 from zebra import Zebra
-from telegram import Update
+from telegram import Update, Message
 from telegram.ext import ContextTypes
 
 from constants import *
@@ -14,7 +16,7 @@ from user import User
 
 async def super_user_command(update: Update, context: ContextTypes.DEFAULT_TYPE, command: str, users: Dict[int, User],
                              printer: Zebra, slap_detector, printer_cf, users_cf, state_cf,
-                             config: Dict) -> bool:
+                             config: Dict, sticker_history: set) -> bool:
     """ Takes a command sent by a user, determines if it's a superuser.
         If it is a superuser, check whether the messages match a command. If so, run that command.
 
@@ -28,6 +30,7 @@ async def super_user_command(update: Update, context: ContextTypes.DEFAULT_TYPE,
         :param users_cf: Dict of configuration settings relating to users.
         :param state_cf: Dict of configuration settings relating to the state of the script.
         :param config: The Dict containing the rest of the _cf configuration dictionaries.
+        :param sticker_history: A set of Telegram Sticker or PhotoSize objects.
 
         :returns: A bool indicating whether the message matches a command.
         """
@@ -43,9 +46,15 @@ async def super_user_command(update: Update, context: ContextTypes.DEFAULT_TYPE,
     if update.message.reply_to_message is not None:
         reply_message = update.message.reply_to_message
 
+        # This one does not rely on having an associated user.
+        if await remove_from_history(update, context, command, reply_message, sticker_history):
+            return True
+
         # Get the sender ID
-        if reply_message.forward_origin != "hidden_user":
-            current_user = users.get(reply_message.forward_origin.sender_user.id)
+        if reply_message.forward_origin != "hidden_user" and reply_message.forward_origin is not None:
+                current_user = users.get(reply_message.forward_origin.sender_user.id)
+        elif (user_id := get_user_from_text(reply_message.text_html)) is not None: # If the reply is to an HTML user mention (Used in the /random feature)
+            current_user = users.get(user_id)
         else:  # if the user has their chat hidden
             for key, value in users.items():
                 if value.check_log(reply_message.id):
@@ -63,9 +72,8 @@ async def super_user_command(update: Update, context: ContextTypes.DEFAULT_TYPE,
             return True
 
         # Check for ban or reset command
-        await ban_reset(update, context, command, current_user)
-
-        return True
+        if await ban_reset(update, context, command, current_user):
+            return True
 
     # ==== General Commands ==== #
     # List commands
@@ -94,6 +102,9 @@ async def super_user_command(update: Update, context: ContextTypes.DEFAULT_TYPE,
         return True
 
     if await toggle_monitoring(update, context, command, state_cf):
+        return True
+
+    if await toggle_random_printing(update, context, command, state_cf):
         return True
 
     # Display print offset and list commands
@@ -248,6 +259,36 @@ async def ban_reset(update: Update, context: ContextTypes.DEFAULT_TYPE, command:
         current_user.sticker_count = 0
         text = responses.USER_LIMIT_RESET.format(amount=str(current_user.sticker_max))
         await context.bot.send_message(chat_id=update.effective_chat.id, text=text)
+        return True
+
+    return False
+
+async def remove_from_history(update: Update, context: ContextTypes.DEFAULT_TYPE,
+                              command: str, reply_message: Message, sticker_history: set) -> bool:
+    """ Reply command. Remove the selected sticker from the pool of stickers the /random feature chooses from to print.
+
+        :param update: Update object containing the sent message.
+        :param context: Object containing the bot interface for the current chat.
+        :param command: The text command sent by the user.
+        :param reply_message: The message that the superuser is replying to.
+        :param sticker_history: A set of Telegram Sticker or PhotoSize objects.
+
+        :returns: A bool indicating whether the message triggers this function.
+        """
+
+    if command == REMOVE:
+        if reply_message.sticker is not None:
+            sticker_history.remove(reply_message.sticker)
+        elif len(reply_message.photo) != 0 :
+            sticker_history.remove(reply_message.photo[-1]) # TODO: Either check all sizes or find the right size
+        else:
+            text = responses.CANT_REMOVE
+            await context.bot.send_message(chat_id=update.effective_chat.id, text=text)
+            return True
+
+        text = responses.STICKER_REMOVED_FROM_HISTORY
+        await context.bot.send_message(chat_id=update.effective_chat.id, text=text)
+        pickle.dump(sticker_history, open("sticker_history.p", "wb"))
         return True
 
     return False
@@ -440,6 +481,36 @@ async def toggle_monitoring(update: Update, context: ContextTypes.DEFAULT_TYPE, 
 
     return False
 
+async def toggle_random_printing(update: Update, context: ContextTypes.DEFAULT_TYPE, command: str,
+                            state_cf: Dict[str, bool]) -> bool:
+    """ Turns random sticker printing feature on or off. The user command that allows the printer to print a random sticker
+
+        :param update: Update object containing the sent message.
+        :param context: Object containing the bot interface for the current chat.
+        :param command: The text command sent by the user.
+        :param state_cf: Dict of configuration settings relating to the state of the script.
+
+        :returns: A bool indicating whether the message triggers this function.
+        """
+
+    if command == RANDOM_OFF:
+        if state_cf['random_sticker_printing']:
+            text = responses.RANDOM_DISABLED
+        else:
+            text = responses.RANDOM_ALREADY_DISABLED
+        state_cf['random_sticker_printing'] = False
+        await context.bot.send_message(chat_id=update.effective_chat.id, text=text)
+        return True
+    if command == RANDOM_ON:
+        if state_cf['random_sticker_printing']:
+            text = responses.RANDOM_ALREADY_ENABLED
+        else:
+            text = responses.RANDOM_ENABLED
+        state_cf['random_sticker_printing'] = True
+        await context.bot.send_message(chat_id=update.effective_chat.id, text=text)
+        return True
+
+    return False
 
 async def get_print_offset(update: Update, context: ContextTypes.DEFAULT_TYPE, command: str,
                            printer_cf: Dict[str, Union[str, int]]) -> bool:
@@ -689,3 +760,20 @@ async def command_not_recognized(update: Update, context: ContextTypes.DEFAULT_T
     text = responses.COMMAND_NOT_RECOGNIZED
     await context.bot.send_message(chat_id=update.effective_chat.id, text=text)
     return
+
+def get_user_from_text(message_text: str) -> Union[int, None]:
+    """ Gets the user_id from an HTML text mention.
+    Used to get the user ID of a user utilizing the /random function since it can't forward it from the user.
+
+        :param message_text: Message text to parse.
+
+        :returns: User ID as int or None
+        """
+    if message_text is None:
+        return None
+
+    match = re.search(r'id=(\d+)', message_text)
+
+    if match:
+        return int(match.group(1))
+    return None
