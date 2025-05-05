@@ -53,7 +53,7 @@ async def limit_exceeded(update: Update, context: ContextTypes.DEFAULT_TYPE, cur
 
 
 async def download_image(update: Update, context: ContextTypes.DEFAULT_TYPE, current_user: User,
-                         object_to_print: Union[Sticker, PhotoSize] = None) -> Union[tuple[File, PhotoSize | Sticker], None]:
+                         object_to_print: Union[Sticker, PhotoSize] = None) -> Union[tuple[File, PhotoSize | Sticker, str], None]:
     """ Downloads the sent image.
         Replies with a timeout message if it fails.
 
@@ -62,8 +62,11 @@ async def download_image(update: Update, context: ContextTypes.DEFAULT_TYPE, cur
         :param current_user: A User object containing the user the operation is being performed on.
         :param object_to_print: A sticker or PhotoSize object to override current message.
         :returns: The downloaded file, or None if it fails.
+                  A PhotoSize or Sticker depending on what was sent.
+                  A string representing the emoji of what was sent. A photo is "📷" by default.
     """
     # TODO: Download the first appropriately sized photo, not just the largest. Save data.
+    emojis = ""
     try:
         if object_to_print is not None:
             # Download the specific requested file
@@ -72,20 +75,23 @@ async def download_image(update: Update, context: ContextTypes.DEFAULT_TYPE, cur
                                  connect_timeout=4.0,
                                  pool_timeout=4.0)
             image_object = object_to_print
+            emojis = image_object.emoji
         elif update.message.sticker is None:
             # Download photo
             sticker_file = await update.message.photo[-1].get_file(read_timeout=4.0,
                                                                    connect_timeout=4.0,
                                                                    pool_timeout=4.0)
             image_object = update.message.photo[-1]
+            emojis = "📷"
         else:
             # Download sticker
             sticker_file = await update.message.sticker.get_file(read_timeout=4.0,
                                                                  connect_timeout=4.0,
                                                                  pool_timeout=4.0)
             image_object = update.message.sticker
+            emojis = image_object.emoji
 
-        return sticker_file, image_object
+        return sticker_file, image_object, emojis
     except telegram.error.TimedOut:
         text = responses.MESSAGE_TIMED_OUT + " " + current_user.get_limit_response()
         await context.bot.send_message(chat_id=update.effective_chat.id, text=text)

@@ -304,7 +304,7 @@ async def receive_sticker(update: Update, context: ContextTypes.DEFAULT_TYPE, ap
 
     # === Print the Sticker === #
     # Get the file
-    sticker_file, image_object = await StickerCommands.download_image(update, context, current_user,
+    sticker_file, image_object, emojis = await StickerCommands.download_image(update, context, current_user,
                                                                       object_to_print=object_to_print)
     if sticker_file is None:
         return
@@ -318,7 +318,7 @@ async def receive_sticker(update: Update, context: ContextTypes.DEFAULT_TYPE, ap
     current_user.sticker_count += 1
 
     # Send confirmation
-    text = responses.get_confirm_message() + "\n\n" + current_user.get_limit_response()
+    text = responses.get_confirm_message(emojis) + "\n\n" + current_user.get_limit_response()
     await context.bot.send_message(chat_id=update.effective_chat.id, text=text,
                                    disable_web_page_preview=True,
                                    parse_mode="HTML")

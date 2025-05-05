@@ -1,4 +1,6 @@
 import random
+from unittest import case
+
 import constants
 
 GITHUB_LINK = "https://github.com/MechLizard/TelegramStickerPrinter"
@@ -174,10 +176,19 @@ Printer commands:
 \"{constants.REMOVE}\" - Remove the sticker from /random feature"""
 
 
-def get_confirm_message():
+def get_confirm_message(emojis = "") -> str:
     """ Randomized confirmation message for after a sticker is successfully sent to the printer.
         Picks at random from the list and inserted at "_____! Sending to the printer!"
+
+        :param emojis: Optional: One or more emojis associated with the sticker. May be used for a custom response.
+        :return: Confirmation message as a string.
     """
+
+    #70% chance of choosing the emoji option, so that it doesn't become predictable.
+    if emojis != "" and random.random() < 0.7:
+        if (message := get_emoji_confirm_message(emojis)) != "":
+            return message + " Sending to the printer!"
+
     responses = [
         "Pog!",
         "As an AI language model that sticker is dope as fuck.",
@@ -191,6 +202,8 @@ def get_confirm_message():
         "This one will look great on your water bottle you bring to work.",
         "That sticker is only 18% cringe!",
         "Thank you for signing up for the furry surveillance program. We are now watching.",
+        "Oh we’re printing this? Okay, choices were made.",
+        "I’ve seen worse. Not often, but I have.",
         """͘            🤠
 　   🖼🖼🖼
    🖼    🖼   🖼
@@ -201,4 +214,173 @@ def get_confirm_message():
 Howdy! I'm the art sheriff and I say that's a good sticker.""",
     ]
 
-    return responses[random.randint(0, len(responses)) - 1] + " Sending to the printer!"
+    conclusion = random.choice([" Sending to the printer!", " Straight to the printer!"])
+    return responses[random.randint(0, len(responses)) - 1] + conclusion
+
+
+def get_emoji_confirm_message(emojis: str) -> str:
+    """ Stickers in telegram are associated with one or more emojis.
+    This gives a custom response based on the emoji of the sticker.
+
+        :param emojis: One or more emojis associated with the sticker. May be used for a custom response.
+    """
+
+    for emoji in emojis:
+        match emoji:
+            case "📷": # used for photos
+                return random.choice(["Art? Photo? Vibe? Doesn’t matter — it’s beautiful.",
+                                    "Looks like culture to me.",
+                                    "Ah yes, modern expressionism with a dash of 'what am I looking at? 🖼️\n",
+                                    "This one belongs in a museum 🖼️.",
+                                    "Truly something to hang on the fridge... or bury in a drawer.",
+                                    "High art. Or cursed content. Depends on who you ask.",
+                                    "Straight from your photo reel to a sticker.",
+                                    "Capturing emotion, color, and some of the creator's unmedicated ADHD.",
+                                    "I’ve seen worse. Not often, but I have 🖼️.",
+                                    "Bold lines. Questionable choices. Iconic 🖼️\n",
+                                    "Picasso is shaking. And crying. 🖼️\n",
+                                    "Look at you, making \"content\" 🖼️\n",
+                                    "This? Oh this is art... in the same way glitter in your cereal is art. Bold choice, darling.",
+                                    "We got big vibes of abstract chaos, unexpected angles, emotional damage in crayon — I LIVE 🖼️\n",
+                                    "It’s giving... budget surrealism with a dash of 'what am I looking at?' 🖼️. Werk."])
+            case "❤️" | "🤗" | "🫂" | "🥰" | "😍" | "💘" | "💝" | "💖" | "💗" | "💓" | "💞" | "💟" | "❣️" | "😊":
+                return "That's so cute ❤️."
+            case "😘" | "😚" | "😗" | "😙" | "💋" | "😉":
+                return "😘"
+            case "🥚":
+                return "👁️👄👁️ Egg."
+            case "🪨" | "🗿":
+                return "🗿\n\n"
+            case "🐳" | "🐋":
+                return "🐋\n\n"
+            case "🔥" | "🌶️" | "🥵":
+                return "😳 spicy."
+            case "🍆" | "🍑" | "😳" | "⛓️" | "🔒" | "🔐" | "💄" | "🍈" | "🌭":
+                return random.choice(["😳 spicy.",
+                                      "Oh... we’re sending that kind of energy today? Noted 😳.",
+                                      "This sticker is giving... unholy vibes. Good 😘.",
+                                      "That’s not a vibe, that’s a lifestyle.",
+                                      "Ma’am. Sir. Creature. I am an innocent python script. But I'll accept it 😏.",
+                                      "Ma’am. Sir. Creature. The printer is blushing. But I'll make it print it anyway~."])
+            case "👮" | "👮‍♂️" | "👮‍♀️" | "🚓" | "🚔":
+                return "ACAB. Yes, this situation too."
+            case "😭" | "😢":
+                return "Crying? I'm crying. 😭"
+            case "😎" | "🆒":
+                return "Cool 😎."
+            case "😬" | "😡" | "🤬" | "😠" | "👎":
+                return "Chill, your sticker will be right out."
+            case "😈":
+                return "You up to no good again 😈."
+            case "😇":
+                return "Don't act so innocent."
+            case "🤔" | "💭":
+                return "What you thinkin' about? Nothing? Same 😐."
+            case "😆" | "🤣" | "😂":
+                return "Crying. Screaming. Throwing up (from laughter) 😂."
+            case "😀" | "😃" | "😄" | "😁" | "😊" | "👍":
+                return "Downloading those good vibes now 😁."
+            case "🦵" | "🦿":
+                return "How you do expect me to put that much leg energy onto one sticker. But I'll try."
+            case "🧠" | "🤓":
+                return ("I'm smart too. My teacher said to me I'm a failure, that I'll never amount to anything. "
+                        "I scoffed at him. Shocked, my teacher asked what's so funny, my future is on the line. "
+                        "\"Well...you see professor\" I say as the teacher prepares to laugh at my answer, "
+                        "rebuttal at hand. \"I watch Rick and Morty.\" The class is shocked, they merely watch "
+                        "pleb shows like the big bang theory to feign intelligence, not grasping the humor. \"...how? "
+                        "I can't even understand it's sheer nuance and subtlety.\" \"Well you see...WUBBA "
+                        "LUBBA DUB DUB!\" One line student laughs in the back, I turn to see a who this fellow "
+                        "genius is. It's none other than Albert Einstein.\n\n...")
+            case "🙃":
+                return "Well this is fine. Everything’s fine 🙃."
+            case "🔫":
+                return "Threatening me won't get you more stickers 😐."
+            case "😶‍🌫️":
+                return "Brain? Gone. Thoughts? Vapor."
+            case "🤑" | "💵" | "💶" | "💸" | "💲" | "💷" | "💰" | "💴":
+                return "Makin' that dosh. That bread. That cheddar. That moolah. Those cold hard grease-flecked jingle biscuits."
+            case "🍺" | "🍻" | "🥂" | "🍾" | "🥳" | "🎆" | "🎉" | "🎊":
+                return "Cheers 🍻!"
+            case "🕷️":
+                return "️͘         👁️👁️👄👁️👁️ - spider\n🦵🦵🦵🦵   🦵🦵🦵🦵\n"
+            case "🔮":
+                return "I forsee... a print job 🔮."
+            case "🧙" | "🧙‍♂️":
+                return "Real wizard posting hours right now 🧙."
+            case "🌈" | "🏳️‍🌈":
+                return "Gaaaay. Just how I like it 🏳️‍🌈."
+            case "🏳️‍⚧️":
+                return "Trans rights 🏳️‍⚧️🏳️‍⚧️🏳️‍⚧️!!"
+            case "🐦" | "🕊" | "🦜":
+                return "That's a nice government drone there 🔭🕵️."
+            case "🐊" | "🦎":
+                return "Cold-blooded and unbothered 🐊🦎."
+            case "🐍":
+                return "Ssslitheringly sssensssational 🐍."
+            case "😺" | "😸" | "🐱" | "🤠" | "🐅" | "🐯" | "🐈" | "🦁" | "😻":
+                return "Meowdy partner 🐱."
+            case "👋":
+                return "Howdy 👋."
+            case "🐶" | "🐕" | "🐕‍🦺":
+                return "That's a good puppy 🐶."
+            case "😪" | "😴" | "💤" | "🛌" | "🛏️":
+                return "Time to WAKE UP ⏰ because you've got a sticker coming."
+            case "🐄" | "🐮" | "🐂" | "🦬" | "🐃":
+                return "This sticker is moooooving 🐮 right to ya."
+            case "🐒" | "🐵" | "🦍" | "🦧":
+                return "Monkey see, monkey print 🐒."
+            case "🦦":
+                return "Otterly adorable 🦦."
+            case "🐴" | "🏇" | "🐎" | "🎠":
+                return "Giddy-up, we’re galloping to the printer 🐴!"
+            case "🐼":
+                return "Too cute to function 🐼."
+            case "🐢":
+                return "Slow and steady, just like my motivation 🐢."
+            case "🐔":
+                return "IS THAT THE CHICKEN FROM CHICKEN JOCKY STEVE MINECRAFT 😲?!"  # TODO Remove this when it's a dead meme
+            case "🐻":
+                return "Soft, cuddly, and might maul you 🐻."
+            case "🐀":
+                return "Rat detected. Grabbing and shipping."
+            case "🐁" | "🐭":
+                return "Small, soft, but probably plotting 🐭."
+            case "🦖" | "🦕":
+                return "We stan the big and small dinos here 🦖."
+            case "🐉" | "🐲":
+                return "Big dragon energy 😏🔥."
+            case "🙈":
+                return "They might be hiding 🙈, but you should look out for this sticker."
+            case "⌚" | "⏲️" | "⏰" | "⏱️" \
+                 "🕐" | "🕑" | "🕒" | "🕓" | "🕔" | "🕕" | "🕖" | "🕗" | "🕘" | "🕙" | "🕚" | "🕛" | \
+                 "🕜" | "🕝" | "🕞" | "🕟" | "🕠" | "🕡" | "🕢" | "🕣" | "🕤" | "🕥" | "🕦" | "🕧":
+                return "You're right. It's TIME 🕐 for your sticker to be printed."
+            case "🎩":
+                return "What a fancy fella 🎩."
+            case "🤡" | "🎪" | "🤹":
+                return "Yeah, we do a little clownin' around here too 🤡."
+            case "📈" | "📊" | "📉" | "💎":
+                return "Stonks 📊."
+            case "👅" | "😛" | "😜" | "😝":
+                return "Mlem 😛"
+            case "💦" | "💧":
+                return "Don't drip too much. I don't have that water-proof sticker paper."
+            case "🥺":
+                return "You don't have to beg anymore."
+            case "👀" | "👁️":
+                return "I see you too 👀. Watch this."
+            case "🧼" | "🫧":
+                return "Time to wash up, stinky."
+            case "📦" | "🎁":
+                return "Packaging up that sticker."
+            case "🐝":
+                return ("According to all known laws of aviation, there is no way a bee should be able to fly."
+                        "Its wings are too small to get its fat little body off the ground."
+                        "The bee, of course, flies anyway because bees don't care what humans think is impossible."
+                        "Yellow, black. Yellow, black. Yellow, black. Yellow, black."
+                        "Ooh, black and yellow!"
+                        "Let's shake it up a little...")
+            case "❓" | "⁉️":
+                return "Wonder no more. I'm sending it to the printer."
+
+    return ""
