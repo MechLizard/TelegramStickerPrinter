@@ -304,8 +304,9 @@ async def receive_sticker(update: Update, context: ContextTypes.DEFAULT_TYPE, ap
 
     # === Print the Sticker === #
     # Get the file
-    sticker_file, image_object, emojis = await StickerCommands.download_image(update, context, current_user,
-                                                                      object_to_print=object_to_print)
+    sticker_file, image_object, emojis = await StickerCommands.download_image(update, context,
+                                                                              printer_cf, current_user,
+                                                                              object_to_print=object_to_print)
     if sticker_file is None:
         return
 

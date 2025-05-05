@@ -32,7 +32,8 @@ STICKER_PRINTED = "Sending to the printer!"
 PRINTER_OFFLINE = "Oof, printer isn't responding. Maybe try again?"
 
 # Connection timed out
-MESSAGE_TIMED_OUT = "Connection timed out, please try again!"
+MESSAGE_TIMED_OUT_RETRYING = "Connection timed out. Retrying..."
+MESSAGE_TIMED_OUT = "Sorry, but the internet here is pretty bad. please try again!"
 
 # No such printer queue
 MISSING_QUEUE = "No such printer queue or missing printer queue in BotConfig.ini.\n" \
