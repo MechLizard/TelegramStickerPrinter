@@ -9,6 +9,7 @@ During setup, one or multiple superusers or administrators can be assigned via t
 A superuser can communicate with the bot through Telegram messages. These commands can:
 - Adjust the sticker limit
 - Get info on sticker limit, status, queue, and settings
+- Clear user or sticker history
 - Enable/disable the bot
 - Enable/disable sticker monitoring (forwards the printed stickers to the superusers)
 - Enable/disable random events
@@ -21,6 +22,11 @@ When the script is run for the first time, it creates a default configuration. T
 
 # Example
 ![img_2.png](readme_images/chat_img.png) ![img_3.png](readme_images/printer_img.png)
+
+# Features
+- Random print command. User command to print a random sticker sent to the printer sent by any user. (With an opt-out feature if the user doesn't want their stickers being saved.)
+- Random events to print from a select sticker pack
+- Custom responses based on the emoji associated with the printed sticker.
 
 # Slap printing
 If an MPU6050, MPU6500, or MPU9250 accelerometer is connected to a Raspberry Pi running this code,

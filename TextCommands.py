@@ -88,6 +88,10 @@ async def super_user_command(update: Update, context: ContextTypes.DEFAULT_TYPE,
     if await wipe(update, context, command, users):
         return True
 
+    # Clears sticker history for the /random feature
+    if await clear_history(update, context, command, sticker_history):
+        return True
+
     # Set all limits to X
     # Command has 3 parts: The command, a space, and a digit
     if await set_limit(update, context, command, users, users_cf):
@@ -351,6 +355,26 @@ async def wipe(update: Update, context: ContextTypes.DEFAULT_TYPE, command: str,
         await context.bot.send_message(chat_id=update.effective_chat.id, text=responses.NO_FILE)
     except OSError:
         await context.bot.send_message(chat_id=update.effective_chat.id, text=responses.CANT_DELETE_FILE)
+    return True
+
+
+async def clear_history(update: Update, context: ContextTypes.DEFAULT_TYPE, command: str, sticker_history: set) -> bool:
+    """ Clears sticker history for the /random feature
+
+        :param update: Update object containing the sent message.
+        :param context: Object containing the bot interface for the current chat.
+        :param command: The text command sent by the user.
+        :param sticker_history: A set of Telegram Sticker or PhotoSize objects.
+
+        :returns: A bool indicating whether the message triggers this function.
+        """
+    if command != CLEAR_HISTORY:
+        return False
+
+    sticker_history.clear()
+    pickle.dump(sticker_history, open("sticker_history.p", "wb"))
+
+    await context.bot.send_message(chat_id=update.effective_chat.id, text=responses.STICKER_HISTORY_CLEARED)
     return True
 
 

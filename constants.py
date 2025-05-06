@@ -10,6 +10,9 @@ RESET_ALL_COUNT = "resetall"
 # Wipes all users
 WIPE = "wipe"
 
+# Clears sticker history for the /random feature
+CLEAR_HISTORY = "clearhistory"
+
 # Set all limits to X
 # Command has 3 parts: The command, a space, and a digit. Ex: setlimit 10
 SET_ALL_LIMIT = "setlimit"

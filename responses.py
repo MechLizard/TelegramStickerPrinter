@@ -78,6 +78,7 @@ Have a good con!
 # ==== Super user responses ==== #
 LOGS_CLEARED = "User limits have been reset"
 USERS_WIPED = "All users wiped"
+STICKER_HISTORY_CLEARED = "Sticker history cleared"
 COUNTS_RESET = "All user counts reset"
 SET_NEW_LIMIT = "New sticker limit set to {amount}"
 GET_LIMIT = "Sticker limit is currently {amount}"
@@ -152,6 +153,7 @@ COMMANDS = f"""
 General commands:
 \"{constants.RESET_ALL_COUNT}\" - Resets sticker count to 0
 \"{constants.WIPE}\" - Wipes all users
+\"{constants.CLEAR_HISTORY}\" - Clear sticker history for /random
 \"{constants.SET_ALL_LIMIT} X\" - Sets sticker limit to X
 \"{constants.GET_LIMIT}\" - Shows the current sticker limit
 \"{constants.BOT_ENABLE}\" - Enables the bot
